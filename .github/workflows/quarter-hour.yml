@@ -1,8 +1,10 @@
 name: Run Scan Every 15 Minutes
 
 on:
+  push:
+    branches: [ "main" ]
   schedule:
-    - cron: '*/15 * * * *'   # كل 15 دقيقة
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 jobs:
@@ -10,4 +12,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Call API
-        run: curl -X GET https://wt-scanner1.vercel.app/api/scan
+        run: curl -sS -X GET https://wt-scanner1.vercel.app/api/scan
