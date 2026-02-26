@@ -1,4 +1,3 @@
-// api/signals.js
 async function kvGet(key) {
   const url   = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
@@ -17,7 +16,8 @@ module.exports = async (req, res) => {
   try {
     const data = await kvGet("wt_signals");
     if (!data) return res.status(200).json({
-      "15m": { signals: [] }, "1h": { signals: [] }, "4h": { signals: [] },
+      wt: { "15m":{signals:[]}, "1h":{signals:[]}, "4h":{signals:[]} },
+      breakout: { signals:[] },
       updatedAt: null, symbolCount: 0, status: "initializing",
     });
     res.status(200).json({ ...data, status: "ok" });
