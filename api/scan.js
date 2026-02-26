@@ -119,11 +119,7 @@ async function runScan() {
 
 // ── Vercel handler ──────────────────────────────────────────────
 module.exports = async (req, res) => {
-  const authHeader = req.headers.authorization ?? "";
-  const secret     = process.env.CRON_SECRET ?? "";
-  if (secret && authHeader !== `Bearer ${secret}` && req.query.secret !== secret) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
+
   try {
     const result = await runScan();
     res.status(200).json({
