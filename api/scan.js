@@ -85,7 +85,7 @@ async function runScan() {
         signals.push({
           type,
           symbol:    sym,
-          date:      dates[idx].toISOString().slice(0,16).replace("T"," "),
+          date:      new Date(dates[idx].getTime() + 3*60*60*1000).toISOString().slice(0,16).replace("T"," "),
           timestamp: ts,
           close:     +closes[idx].toFixed(2),
           volume:    Math.round(volumes[idx]),
@@ -109,7 +109,7 @@ async function runScan() {
   signals.sort((a, b) => b.timestamp - a.timestamp);
   const result = {
     signals,
-    updatedAt:   new Date().toISOString(),
+    updatedAt:   new Date(Date.now() + 3*60*60*1000).toISOString(),
     symbolCount: SYMBOLS.length,
     errorCount:  errors.length,
   };
