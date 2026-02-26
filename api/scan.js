@@ -1,26 +1,23 @@
-// api/scan.js — يجلب البيانات مباشرة من Yahoo Finance بدون مكتبة خارجية
+// api/scan.js — Multi-timeframe scanner (15m, 1h, 4h)
 const { calcWT, calcRSI, volAvg } = require("./indicators");
 const { SYMBOLS, CONFIG }         = require("./config");
 
-// ── KV helper (Upstash Redis REST API) ─────────────────────────
+// ── KV helper ──────────────────────────────────────────────────
 async function kvSet(key, value) {
   const url   = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
   if (!url || !token) return false;
   await fetch(`${url}/pipeline`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify([["SET", key, JSON.stringify(value)]]),
   });
   return true;
 }
 
-// ── Fetch from Yahoo Finance directly ──────────────────────────
-async function fetchYahoo(symbol, interval, period) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${period}&includePrePost=false`;
+// ── Fetch Yahoo Finance ─────────────────────────────────────────
+async function fetchYahoo(symbol, interval, range) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}&includePrePost=false`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" },
   });
@@ -31,10 +28,10 @@ async function fetchYahoo(symbol, interval, period) {
 
   const timestamps = result.timestamp || [];
   const quote      = result.indicators?.quote?.[0] || {};
-  const closes     = quote.close  || [];
-  const highs      = quote.high   || [];
-  const lows       = quote.low    || [];
-  const volumes    = quote.volume || [];
+  const closes  = quote.close  || [];
+  const highs   = quote.high   || [];
+  const lows    = quote.low    || [];
+  const volumes = quote.volume || [];
 
   const valid = [];
   for (let i = 0; i < timestamps.length; i++) {
@@ -51,15 +48,15 @@ async function fetchYahoo(symbol, interval, period) {
   return valid;
 }
 
-// ── Main scanner ────────────────────────────────────────────────
-async function runScan() {
-  const cutoffMs = Date.now() - CONFIG.DAYS_BACK * 86400 * 1000;
+// ── Scan one timeframe ──────────────────────────────────────────
+async function scanTimeframe(interval, range, daysBack) {
+  const cutoffMs = Date.now() - daysBack * 86400 * 1000;
   const signals  = [];
   const errors   = [];
 
   for (const sym of SYMBOLS) {
     try {
-      const quotes = await fetchYahoo(sym, CONFIG.INTERVAL, CONFIG.PERIOD);
+      const quotes = await fetchYahoo(sym, interval, range);
       if (quotes.length < 30) { errors.push(sym); continue; }
 
       const closes  = quotes.map(q => q.close);
@@ -73,10 +70,7 @@ async function runScan() {
       const isHigh = avgVol >= CONFIG.VOL_THRESHOLD;
       const avg10  = volAvg(volumes, 10);
       const rsiArr = calcRSI(closes, CONFIG.RSI_PERIOD);
-      const { buys, sells } = calcWT(
-        highs, lows, closes,
-        CONFIG.WT_N1, CONFIG.WT_N2, CONFIG.WT_NSC, CONFIG.WT_NSV
-      );
+      const { buys, sells } = calcWT(highs, lows, closes, CONFIG.WT_N1, CONFIG.WT_N2, CONFIG.WT_NSC, CONFIG.WT_NSV);
 
       const push = (idx, type) => {
         const ts = dates[idx].getTime();
@@ -85,7 +79,11 @@ async function runScan() {
         signals.push({
           type,
           symbol:    sym,
-          date:      new Date(dates[idx].getTime()).toLocaleString('ar-SA', {timeZone:'Asia/Riyadh', hour:'2-digit', minute:'2-digit', year:'numeric', month:'2-digit', day:'2-digit', hour12:false}),
+          date:      new Date(dates[idx]).toLocaleString('en-GB', {
+            timeZone: 'Asia/Riyadh',
+            day:'2-digit', month:'2-digit',
+            hour:'2-digit', minute:'2-digit', hour12: false
+          }),
           timestamp: ts,
           close:     +closes[idx].toFixed(2),
           volume:    Math.round(volumes[idx]),
@@ -93,42 +91,52 @@ async function runScan() {
           highVol:   isHigh,
           volConf:   volumes[idx] > avg10[idx],
           rsi:       rsi !== null ? +rsi.toFixed(1) : null,
-          rsiSignal: rsi !== null &&
-            ((type === "buy" && rsi < 30) || (type === "sell" && rsi > 70)),
+          rsiSignal: rsi !== null && ((type==="buy" && rsi < 30) || (type==="sell" && rsi > 70)),
         });
       };
 
       buys.forEach(i  => push(i, "buy"));
       sells.forEach(i => push(i, "sell"));
 
-    } catch (e) {
+    } catch(e) {
       errors.push(`${sym}: ${e.message}`);
     }
   }
 
   signals.sort((a, b) => b.timestamp - a.timestamp);
-  const result = {
-    signals,
-    updatedAt:   new Date().toISOString(),
-    symbolCount: SYMBOLS.length,
-    errorCount:  errors.length,
-  };
-  await kvSet("wt_signals", result);
-  return result;
+  return { signals, errorCount: errors.length };
 }
 
-// ── Vercel handler ──────────────────────────────────────────────
+// ── Main handler ────────────────────────────────────────────────
 module.exports = async (req, res) => {
-
   try {
-    const result = await runScan();
+    const now = new Date().toISOString();
+
+    // Run all 3 timeframes in parallel
+    const [tf15m, tf1h, tf4h] = await Promise.all([
+      scanTimeframe("15m", "5d",  1),
+      scanTimeframe("1h",  "14d", 2),
+      scanTimeframe("4h",  "60d", 7),
+    ]);
+
+    const result = {
+      "15m": { signals: tf15m.signals, errorCount: tf15m.errorCount },
+      "1h":  { signals: tf1h.signals,  errorCount: tf1h.errorCount  },
+      "4h":  { signals: tf4h.signals,  errorCount: tf4h.errorCount  },
+      updatedAt:   now,
+      symbolCount: SYMBOLS.length,
+    };
+
+    await kvSet("wt_signals", result);
+
     res.status(200).json({
       ok:      true,
-      count:   result.signals.length,
-      updated: result.updatedAt,
-      errors:  result.errorCount,
+      "15m":   tf15m.signals.length,
+      "1h":    tf1h.signals.length,
+      "4h":    tf4h.signals.length,
+      updated: now,
     });
-  } catch (e) {
+  } catch(e) {
     res.status(500).json({ error: e.message });
   }
 };

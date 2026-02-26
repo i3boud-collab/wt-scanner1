@@ -8,8 +8,7 @@ async function kvGet(key) {
   });
   const j = await r.json();
   if (!j.result) return null;
-  try { return JSON.parse(j.result); }
-  catch { return j.result; }
+  try { return JSON.parse(j.result); } catch { return j.result; }
 }
 
 module.exports = async (req, res) => {
@@ -17,14 +16,12 @@ module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   try {
     const data = await kvGet("wt_signals");
-    if (!data) {
-      return res.status(200).json({
-        signals: [], updatedAt: null,
-        symbolCount: 0, errorCount: 0, status: "initializing",
-      });
-    }
+    if (!data) return res.status(200).json({
+      "15m": { signals: [] }, "1h": { signals: [] }, "4h": { signals: [] },
+      updatedAt: null, symbolCount: 0, status: "initializing",
+    });
     res.status(200).json({ ...data, status: "ok" });
-  } catch (e) {
+  } catch(e) {
     res.status(500).json({ error: e.message });
   }
 };
