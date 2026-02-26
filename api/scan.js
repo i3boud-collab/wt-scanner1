@@ -85,7 +85,7 @@ async function runScan() {
         signals.push({
           type,
           symbol:    sym,
-          date:      new Date(dates[idx].getTime() + 3*60*60*1000).toISOString().slice(0,16).replace("T"," "),
+          date:      new Date(dates[idx].getTime()).toLocaleString('ar-SA', {timeZone:'Asia/Riyadh', hour:'2-digit', minute:'2-digit', year:'numeric', month:'2-digit', day:'2-digit', hour12:false}),
           timestamp: ts,
           close:     +closes[idx].toFixed(2),
           volume:    Math.round(volumes[idx]),
