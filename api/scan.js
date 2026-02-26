@@ -109,7 +109,7 @@ async function runScan() {
   signals.sort((a, b) => b.timestamp - a.timestamp);
   const result = {
     signals,
-    updatedAt:   new Date(Date.now() + 3*60*60*1000).toISOString(),
+    updatedAt:   new Date().toISOString(),
     symbolCount: SYMBOLS.length,
     errorCount:  errors.length,
   };
