@@ -23,6 +23,7 @@ const SYMBOLS = [
 
   // Infrastructure
   "DELL","HPQ","CSCO",
+  "CRM","PEP","KO","LULU","UBER","FSLR","SMCI","MRVL","LLY","UPS",
 ];
 
 const CONFIG = {
