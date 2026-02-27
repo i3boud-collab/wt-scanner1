@@ -22,7 +22,8 @@ const SYMBOLS = [
   "COIN","HOOD","SOFI",
 
   // Infrastructure
-  "DELL","HPQ","CSCO",
+  "DELL","HPQ","CSCO","KO","MRVL","UPS","PEP",
+  "UBER","LULU","LLY","LC",
 ];
 
 const CONFIG = {
