@@ -3,27 +3,10 @@
 // ─────────────────────────────────────────────────────────────
 
 const SYMBOLS = [
-  // Mega-cap Tech
-  "AAPL","MSFT","NVDA","META","GOOGL","AMZN","TSLA","AVGO",
-
-  // Semiconductors
-  "AMD","QCOM","INTC","MU","TXN","ASML","LRCX","AMAT",
-
-  // Software / Cloud
-  "CRM","ADBE","ORCL","NOW","SNOW","DDOG","CRWD","ZS","NET","PANW",
-
-  // Consumer / E-comm
-  "NFLX","SHOP","ABNB","PYPL","RBLX",
-
-  // AI / Speculative
-  "PLTR","AI","ARM","SMCI","MSTR",
-
-  // Fintech / Crypto-adjacent
-  "COIN","HOOD","SOFI",
-
-  // Infrastructure
-  "DELL","HPQ","CSCO","KO","MRVL","UPS","PEP",
-  "UBER","LULU","LLY","LC",
+  "TSLA","NVDA","AAPL","META","GOOGL",
+  "MSFT","AMD","NOW","MU","INTC",
+  "QCOM","MRVL","ORCL","SPXC","AVGO",
+  "UBER",
 ];
 
 const CONFIG = {
