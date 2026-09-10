@@ -2,7 +2,7 @@
 
 ## الملفات المطلوبة
 ```
-wt-live/
+wt-live/ 
 ├── vercel.json          ← إعدادات Cron وRouting
 ├── package.json         ← المكتبات
 ├── api/
