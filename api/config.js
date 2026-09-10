@@ -5,7 +5,7 @@
 const SYMBOLS = [
   "TSLA","NVDA","AAPL","META","GOOGL",
   "MSFT","AMD","NOW","MU","INTC",
-  "QCOM","MRVL","ORCL","SPXC","AVGO",
+  "QCOM","MRVL","ORCL","SPCX","AVGO",
   "UBER",
 ];
 
