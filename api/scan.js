@@ -134,7 +134,7 @@ async function scanBreakout() {
 
   for (const sym of SYMBOLS) {
     try {
-      const quotes = await fetchYahoo(sym, "1d", "6mo");
+      const quotes = await fetchYahoo(sym, "1d", "2y");
       if (quotes.length < 60) { errors.push(sym); continue; }
 
       const closes  = quotes.map(q => q.close);
