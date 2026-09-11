@@ -166,6 +166,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .card:hover,.bo-card:hover{transform:none;border-color:#33547f;box-shadow:0 8px 24px rgba(0,0,0,.2)}
 .ch,.bo-head{padding:14px}.arr,.bo-icon{width:34px;height:34px;border-radius:50%;font-size:13px}.sym,.bo-sym{font-size:17px}.new-tag{background:#1d75ea;color:#fff}
 .ch-date,.bo-type{font-size:9px}.ch-price{font-size:17px}.pills,.bo-tags{padding:0 14px 12px}.p{border-radius:4px;font-size:8px;padding:3px 6px}
+.p-level{font-family:var(--sans);font-size:10px}.p-level-setup{background:rgba(47,136,255,.10);color:#6aa7ff;border-color:rgba(47,136,255,.35)}.p-level-trend{background:rgba(255,138,76,.10);color:var(--orange);border-color:rgba(255,138,76,.35)}.p-level-confirmed{background:rgba(0,196,140,.10);color:var(--buy);border-color:rgba(0,196,140,.35)}.p-level-strong{background:rgba(138,124,255,.12);color:#a99eff;border-color:rgba(138,124,255,.38)}
 .cf,.bo-levels{background:#0a1525;border-color:#1b2b43}.cf-i,.bo-lv{border-color:#1b2b43}.bo-ema{border-color:#1b2b43}.bo-ema-i{border-color:#1b2b43}
 .empty{border-radius:7px;border-color:#213550}.e-icon{background:#101e32;color:var(--blue);border-radius:50%}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
@@ -271,14 +272,16 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
     <div class="sc g"><div class="sn" id="bo-buy">0</div><div class="sl">CALL</div></div>
     <div class="sc r"><div class="sn" id="bo-sell">0</div><div class="sl">PUT</div></div>
     <div class="sc o"><div class="sn" id="bo-conf">0</div><div class="sl">ثقة عالية</div></div>
-    <div class="sc b"><div class="sn" id="bo-sym">0</div><div class="sl">رموز</div></div>
+    <div class="sc b"><div class="sn" id="bo-setup">0</div><div class="sl">قريب</div></div>
   </div>
   <!-- Filters BO -->
   <div class="filters">
     <button class="f on" onclick="setBOF(this,'all')">الكل</button>
     <button class="f" onclick="setBOF(this,'buy')">CALL ↑</button>
     <button class="f" onclick="setBOF(this,'sell')">PUT ↓</button>
-    <button class="f" onclick="setBOF(this,'highconf')">ثقة عالية</button>
+    <button class="f" onclick="setBOF(this,'setup')">قريب من الاختراق</button>
+    <button class="f" onclick="setBOF(this,'highconf')">اختراق مؤكد</button>
+    <button class="f" onclick="setBOF(this,'strong')">اختراق قوي</button>
     <button class="f" onclick="setBOF(this,'vol')">فوليوم</button>
   </div>
 </div>
@@ -399,11 +402,11 @@ function renderStats() {
 
   // Breakout stats
   const bo    = data.breakout.signals;
-  const bBuy  = bo.filter(s=>s.type==='buy').length;
-  const bSell = bo.filter(s=>s.type==='sell').length;
-  const bHigh = bo.filter(s=>s.confidence>=80).length;
-  const bSym  = new Set(bo.map(s=>s.symbol)).size;
-  anim('bo-buy',bBuy); anim('bo-sell',bSell); anim('bo-conf',bHigh); anim('bo-sym',bSym);
+  const bBuy   = bo.filter(s=>s.type==='buy' && s.level!=='setup').length;
+  const bSell  = bo.filter(s=>s.type==='sell' && s.level!=='setup').length;
+  const bHigh  = bo.filter(s=>s.level==='confirmed' || s.level==='strong').length;
+  const bSetup = bo.filter(s=>s.level==='setup').length;
+  anim('bo-buy',bBuy); anim('bo-sell',bSell); anim('bo-conf',bHigh); anim('bo-setup',bSetup);
 }
 
 function anim(id,target) {
@@ -502,7 +505,9 @@ function renderBO() {
   let sigs = [...data.breakout.signals];
   if(boFilt==='buy')      sigs=sigs.filter(s=>s.type==='buy');
   if(boFilt==='sell')     sigs=sigs.filter(s=>s.type==='sell');
-  if(boFilt==='highconf') sigs=sigs.filter(s=>s.confidence>=80);
+  if(boFilt==='setup')    sigs=sigs.filter(s=>s.level==='setup');
+  if(boFilt==='highconf') sigs=sigs.filter(s=>s.level==='confirmed'||s.level==='strong');
+  if(boFilt==='strong')   sigs=sigs.filter(s=>s.level==='strong');
   if(boFilt==='vol')      sigs=sigs.filter(s=>s.highVol);
   if(srch){ const q=srch.toUpperCase(); sigs=sigs.filter(s=>s.symbol.includes(q)); }
 
@@ -512,18 +517,22 @@ function renderBO() {
   wrap.innerHTML = sigs.map((s,i)=>{
     const buy  = s.type==='buy';
     const conf = s.confidence||0;
+    const level = s.level || (conf>=80?'confirmed':'trend');
+    const levelText = {setup:'قريب من الاختراق',trend:'اختراق اتجاهي',confirmed:'اختراق مؤكد',strong:'اختراق قوي'}[level];
     const r    = 22, circ = 2*Math.PI*r;
     const dash = circ*(conf/100);
-    const confColor = conf>=80?'var(--buy)':conf>=60?'var(--gold)':'var(--orange)';
+    const confColor = level==='setup'?'var(--blue)':level==='trend'?'var(--orange)':level==='strong'?'var(--purple)':'var(--buy)';
     const rsiC = !s.rsi?'var(--muted)':s.rsi>60?'var(--buy)':s.rsi<40?'var(--sell)':'var(--blue)';
+    const entry = level==='setup' && s.trigger!=null ? s.trigger : s.close;
+    const entryLabel = level==='setup' ? 'Trigger' : 'Entry';
     return `
-    <div class="bo-card ${s.type}" style="animation-delay:${Math.min(i*25,300)}ms">
+    <div class="bo-card ${s.type} level-${level}" style="animation-delay:${Math.min(i*25,300)}ms">
       <div class="bo-head">
         <div class="bo-left">
           <div class="bo-icon">${buy?'↑':'↓'}</div>
           <div>
             <div class="bo-sym">${s.symbol}</div>
-            <div class="bo-type">${buy?'▲ CALL — Breakout Up':'▼ PUT — Breakout Down'}</div>
+            <div class="bo-type">${buy?'▲ CALL':'▼ PUT'} — ${levelText}</div>
             <div class="bo-type" style="margin-top:2px">⏱ ${s.date}</div>
           </div>
         </div>
@@ -541,7 +550,7 @@ function renderBO() {
       </div>
 
       <div class="bo-levels">
-        <div class="bo-lv"><div class="bo-lv-val entry-v">$${s.close}</div><div class="bo-lv-lbl">Entry</div></div>
+        <div class="bo-lv"><div class="bo-lv-val entry-v">$${entry}</div><div class="bo-lv-lbl">${entryLabel}</div></div>
         <div class="bo-lv"><div class="bo-lv-val tp-v">$${s.tp}</div><div class="bo-lv-lbl">TP +3×ATR</div></div>
         <div class="bo-lv"><div class="bo-lv-val sl-v">$${s.sl}</div><div class="bo-lv-lbl">SL -1.5×ATR</div></div>
       </div>
@@ -554,8 +563,9 @@ function renderBO() {
 
       <div class="bo-tags">
         <span class="p ${buy?'p-gb':'p-gs'}">${buy?'▲ CALL':'▼ PUT'}</span>
+        <span class="p p-level p-level-${level}">${levelText}</span>
         ${s.highVol?'<span class="p p-go">HIGH VOL</span>':''}
-        ${conf>=80?'<span class="p p-gr">✓ HIGH CONF</span>':''}
+        ${level==='confirmed'||level==='strong'?'<span class="p p-gr">✓ CONFIRMED</span>':''}
         ${s.rsi!=null?`<span class="p p-gy" style="color:${rsiC}">RSI ${s.rsi}</span>`:''}
         <span class="p p-gy">ATR $${s.atr}</span>
       </div>
