@@ -168,8 +168,10 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .ch-date,.bo-type{font-size:9px}.ch-price{font-size:17px}.pills,.bo-tags{padding:0 14px 12px}.p{border-radius:4px;font-size:8px;padding:3px 6px}
 .p-level{font-family:var(--sans);font-size:10px}.p-level-setup{background:rgba(47,136,255,.10);color:#6aa7ff;border-color:rgba(47,136,255,.35)}.p-level-trend{background:rgba(255,138,76,.10);color:var(--orange);border-color:rgba(255,138,76,.35)}.p-level-confirmed{background:rgba(0,196,140,.10);color:var(--buy);border-color:rgba(0,196,140,.35)}.p-level-strong{background:rgba(138,124,255,.12);color:#a99eff;border-color:rgba(138,124,255,.38)}
 .cf,.bo-levels{background:#0a1525;border-color:#1b2b43}.cf-i,.bo-lv{border-color:#1b2b43}.bo-ema{border-color:#1b2b43}.bo-ema-i{border-color:#1b2b43}
+.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-stop{grid-column:span 3}.bo-lv-target{grid-column:span 2}.bo-lv-target .bo-lv-lbl{color:#6686ad}.bo-lv-target.t1 .bo-lv-val{color:#66a9ff}.bo-lv-target.t2 .bo-lv-val{color:#38d3a1}.bo-lv-target.t3 .bo-lv-val{color:#00e0a0}
 .empty{border-radius:7px;border-color:#213550}.e-icon{background:#101e32;color:var(--blue);border-radius:50%}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
+@media(min-width:621px){.bo-levels{grid-template-columns:repeat(5,1fr)}.bo-lv-entry,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
 @media(max-width:900px){.command-bar{grid-template-columns:1fr auto}.bot{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){
   header{height:54px;padding-inline:13px}.shell{padding:12px 10px 20px}.command-bar{grid-template-columns:1fr auto;gap:8px}.page-title{font-size:17px}.page-title span{display:none}.info-bar{justify-content:flex-end}.update-box>span:nth-child(2){display:none}.bot{grid-column:1/-1}
@@ -525,6 +527,10 @@ function renderBO() {
     const rsiC = !s.rsi?'var(--muted)':s.rsi>60?'var(--buy)':s.rsi<40?'var(--sell)':'var(--blue)';
     const entry = level==='setup' && s.trigger!=null ? s.trigger : s.close;
     const entryLabel = level==='setup' ? 'Trigger' : 'Entry';
+    const dir = buy ? 1 : -1;
+    const t1 = s.t1 ?? +(entry + dir * s.atr).toFixed(2);
+    const t2 = s.t2 ?? +(entry + dir * 2 * s.atr).toFixed(2);
+    const t3 = s.t3 ?? s.tp ?? +(entry + dir * 3 * s.atr).toFixed(2);
     return `
     <div class="bo-card ${s.type} level-${level}" style="animation-delay:${Math.min(i*25,300)}ms">
       <div class="bo-head">
@@ -550,9 +556,11 @@ function renderBO() {
       </div>
 
       <div class="bo-levels">
-        <div class="bo-lv"><div class="bo-lv-val entry-v">$${entry}</div><div class="bo-lv-lbl">${entryLabel}</div></div>
-        <div class="bo-lv"><div class="bo-lv-val tp-v">$${s.tp}</div><div class="bo-lv-lbl">TP +3×ATR</div></div>
-        <div class="bo-lv"><div class="bo-lv-val sl-v">$${s.sl}</div><div class="bo-lv-lbl">SL -1.5×ATR</div></div>
+        <div class="bo-lv bo-lv-entry"><div class="bo-lv-val entry-v">$${entry}</div><div class="bo-lv-lbl">${entryLabel}</div></div>
+        <div class="bo-lv bo-lv-stop"><div class="bo-lv-val sl-v">$${s.sl}</div><div class="bo-lv-lbl">SL · 1.5×ATR</div></div>
+        <div class="bo-lv bo-lv-target t1"><div class="bo-lv-val">$${t1}</div><div class="bo-lv-lbl">T1 · 1×ATR</div></div>
+        <div class="bo-lv bo-lv-target t2"><div class="bo-lv-val">$${t2}</div><div class="bo-lv-lbl">T2 · 2×ATR</div></div>
+        <div class="bo-lv bo-lv-target t3"><div class="bo-lv-val">$${t3}</div><div class="bo-lv-lbl">T3 · 3×ATR</div></div>
       </div>
 
       <div class="bo-ema">
