@@ -55,12 +55,26 @@ function calcEMA(arr, span) {
   return res;
 }
 
-function calcATR(highs, lows, period = 14) {
-  const tr = highs.map((h, i) => h - lows[i]);
-  return tr.map((_, i) => {
-    if (i < period - 1) return null;
-    return tr.slice(i - period + 1, i + 1).reduce((s, v) => s + v, 0) / period;
+function calcATR(highs, lows, closes, period = 14) {
+  const tr = highs.map((high, i) => {
+    if (i === 0) return high - lows[i];
+    const prevClose = closes[i - 1];
+    return Math.max(
+      high - lows[i],
+      Math.abs(high - prevClose),
+      Math.abs(lows[i] - prevClose),
+    );
   });
+
+  const atr = Array(tr.length).fill(null);
+  if (tr.length < period) return atr;
+
+  // Wilder's smoothing: seed with the first 14-period average, then smooth.
+  atr[period - 1] = tr.slice(0, period).reduce((sum, value) => sum + value, 0) / period;
+  for (let i = period; i < tr.length; i++) {
+    atr[i] = ((atr[i - 1] * (period - 1)) + tr[i]) / period;
+  }
+  return atr;
 }
 
 // ── Format date to Riyadh time ─────────────────────────────────
@@ -146,7 +160,7 @@ async function scanBreakout() {
       const ema20  = calcEMA(closes, 20);
       const ema50  = calcEMA(closes, 50);
       const ema200 = calcEMA(closes, 200);
-      const atrArr = calcATR(highs, lows, 14);
+      const atrArr = calcATR(highs, lows, closes, 14);
       const rsiArr = calcRSI(closes, 14);
 
       // Rolling 20-period high/low
@@ -207,7 +221,10 @@ async function scanBreakout() {
         if (!type) continue;
 
         const entry = trigger || close;
-        const tp    = type === "buy"  ? +(entry + 3 * atr).toFixed(2) : +(entry - 3 * atr).toFixed(2);
+        const dir   = type === "buy" ? 1 : -1;
+        const t1    = +(entry + dir * atr).toFixed(2);
+        const t2    = +(entry + dir * 2 * atr).toFixed(2);
+        const t3    = +(entry + dir * 3 * atr).toFixed(2);
         const sl    = type === "buy"  ? +(entry - 1.5 * atr).toFixed(2) : +(entry + 1.5 * atr).toFixed(2);
 
         signals.push({
@@ -216,7 +233,7 @@ async function scanBreakout() {
           timestamp:  ts,
           close:      +close.toFixed(2),
           trigger:    trigger !== null ? +trigger.toFixed(2) : null,
-          tp, sl,
+          t1, t2, t3, tp: t3, sl,
           atr:        +atr.toFixed(2),
           rsi:        rsi !== null ? +rsi.toFixed(1) : null,
           confidence,
