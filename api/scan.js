@@ -135,7 +135,7 @@ async function scanBreakout() {
   for (const sym of SYMBOLS) {
     try {
       const quotes = await fetchYahoo(sym, "1d", "2y");
-      if (quotes.length < 60) { errors.push(sym); continue; }
+      if (quotes.length < 210) { errors.push(sym); continue; }
 
       const closes  = quotes.map(q => q.close);
       const highs   = quotes.map(q => q.high);
@@ -174,39 +174,48 @@ async function scanBreakout() {
         const prevLow  = roll20Low[i-1];
         if (!prevHigh || !prevLow) continue;
 
-        // Volume confirmation
+        // Confirmation inputs
         const highVol = volNow > 1.5 * volAvgN;
+        const bullTrend = ema20[i] > ema50[i] && ema50[i] > ema200[i];
+        const bearTrend = ema20[i] < ema50[i] && ema50[i] < ema200[i];
+        const rsiBull   = rsi !== null && rsi > 60;
+        const rsiBear   = rsi !== null && rsi < 40;
+        const brokeUp   = close > prevHigh && bullTrend;
+        const brokeDown = close < prevLow && bearTrend;
 
-        // Confidence score
-        let confidence = 0;
-        if (highVol) confidence += 20;
+        // Early setup: within 1% or 0.5 ATR of the 20-day level.
+        const nearBand  = Math.max(close * 0.01, atr * 0.5);
+        const setupUp   = !brokeUp && close <= prevHigh && close >= prevHigh - nearBand && ema20[i] > ema50[i] && rsi !== null && rsi >= 50;
+        const setupDown = !brokeDown && close >= prevLow && close <= prevLow + nearBand && ema20[i] < ema50[i] && rsi !== null && rsi <= 50;
 
-        let type = null;
+        let type = null, level = null, confidence = 0, trigger = null;
 
-        // CALL (Breakout up)
-        if (close > prevHigh && ema20[i] > ema50[i] && ema50[i] > ema200[i]) {
-          type = "buy";
-          if (rsi > 60) confidence += 20;
-          if (ema20[i] > ema50[i] && ema50[i] > ema200[i]) confidence += 20;
+        if (brokeUp || brokeDown) {
+          type = brokeUp ? "buy" : "sell";
+          confidence = 40;                    // Price cleared the 20-day level
+          confidence += 20;                   // EMA20/50/200 trend is aligned
+          if (type === "buy" ? rsiBull : rsiBear) confidence += 20;
+          if (highVol) confidence += 20;
+          level = confidence === 100 ? "strong" : confidence >= 80 ? "confirmed" : "trend";
+        } else if (setupUp || setupDown) {
+          type = setupUp ? "buy" : "sell";
+          trigger = type === "buy" ? prevHigh : prevLow;
+          confidence = 40 + ((type === "buy" ? bullTrend : bearTrend) ? 10 : 0);
+          level = "setup";
         }
-        // PUT (Breakout down)
-        else if (close < prevLow && ema20[i] < ema50[i] && ema50[i] < ema200[i]) {
-          type = "sell";
-          if (rsi < 40) confidence += 20;
-          if (ema20[i] < ema50[i] && ema50[i] < ema200[i]) confidence += 20;
-        }
 
-        if (!type || confidence < 40) continue;
+        if (!type) continue;
 
-        const entry = close;
+        const entry = trigger || close;
         const tp    = type === "buy"  ? +(entry + 3 * atr).toFixed(2) : +(entry - 3 * atr).toFixed(2);
         const sl    = type === "buy"  ? +(entry - 1.5 * atr).toFixed(2) : +(entry + 1.5 * atr).toFixed(2);
 
         signals.push({
-          type, symbol: sym,
+          type, level, symbol: sym,
           date:       fmtDate(dates[i]),
           timestamp:  ts,
           close:      +close.toFixed(2),
+          trigger:    trigger !== null ? +trigger.toFixed(2) : null,
           tp, sl,
           atr:        +atr.toFixed(2),
           rsi:        rsi !== null ? +rsi.toFixed(1) : null,
@@ -215,7 +224,7 @@ async function scanBreakout() {
           avgVol:     Math.round(volAvgN),
           highVol,
           volConf:    highVol,
-          rsiSignal:  type==="buy" ? rsi > 60 : rsi < 40,
+          rsiSignal:  type==="buy" ? rsiBull : rsiBear,
           ema20:      +ema20[i].toFixed(2),
           ema50:      +ema50[i].toFixed(2),
           ema200:     +ema200[i].toFixed(2),
@@ -224,7 +233,8 @@ async function scanBreakout() {
     } catch(e) { errors.push(`${sym}: ${e.message}`); }
   }
 
-  // Remove duplicates (keep latest per symbol/type)
+  // Remove duplicates after newest-first sorting (keep latest per symbol/type)
+  signals.sort((a, b) => b.timestamp - a.timestamp);
   const seen = new Set();
   const unique = signals.filter(s => {
     const k = `${s.symbol}-${s.type}`;
@@ -232,7 +242,10 @@ async function scanBreakout() {
     seen.add(k); return true;
   });
 
-  unique.sort((a, b) => b.confidence - a.confidence || b.timestamp - a.timestamp);
+  unique.sort((a, b) => {
+    const rank = { strong: 4, confirmed: 3, trend: 2, setup: 1 };
+    return (rank[b.level] || 0) - (rank[a.level] || 0) || b.confidence - a.confidence || b.timestamp - a.timestamp;
+  });
   return { signals: unique, errorCount: errors.length };
 }
 
@@ -269,6 +282,9 @@ module.exports = async (req, res) => {
       wt_1h:    tf1h.signals.length,
       wt_4h:    tf4h.signals.length,
       breakout: breakout.signals.length,
+      breakout_setup: breakout.signals.filter(s => s.level === "setup").length,
+      breakout_confirmed: breakout.signals.filter(s => s.level === "confirmed").length,
+      breakout_strong: breakout.signals.filter(s => s.level === "strong").length,
       updated:  now,
     });
   } catch(e) {
