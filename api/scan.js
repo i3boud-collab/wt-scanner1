@@ -245,14 +245,17 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
         const sl    = type === "buy"  ? +(entry - 1.5 * atr).toFixed(2) : +(entry + 1.5 * atr).toFixed(2);
 
         const previous = previousByKey.get(`${sym}-${type}-${level}-${ts}`);
+        const alertedAt = previous?.alertedAt ?? scanStartedAt;
         signals.push({
           type, level, symbol: sym,
-          date:       fmtDate(dates[i]),
+          // Show the real detection time, not Yahoo's daily-candle start time.
+          date:       fmtDate(alertedAt),
+          candleDate: fmtDate(dates[i]),
           timestamp:  ts,
           close:      +close.toFixed(2),
           // Freeze the underlying price when this exact signal is first detected.
           alertPrice: previous?.alertPrice ?? +close.toFixed(2),
-          alertedAt:  previous?.alertedAt  ?? scanStartedAt,
+          alertedAt,
           trigger:    trigger !== null ? +trigger.toFixed(2) : null,
           t1, t2, t3, tp: t3, sl,
           atr:        +atr.toFixed(2),
@@ -291,6 +294,7 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
 // MAIN HANDLER
 // ════════════════════════════════════════════════════════════════
 module.exports = async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   try {
     const now = new Date().toISOString();
     const previous = await kvGet("wt_signals");
