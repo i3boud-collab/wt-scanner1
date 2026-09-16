@@ -101,7 +101,7 @@ header{position:sticky;top:0;z-index:200;background:rgba(7,9,9,.92);border-botto
 .rsi-m{display:flex;align-items:center;gap:5px}.rsi-t{width:34px;height:3px;background:var(--panel3);border-radius:4px;overflow:hidden}.rsi-f{height:100%;border-radius:4px}
 .cf{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:#0a0d0c}.cf-i{padding:10px 7px;text-align:center;border-inline-start:1px solid var(--line)}.cf-i:first-child{border-inline-start:0}.cf-v{font-family:var(--mono);font-size:12px;font-weight:700}.cf-l{font-size:9px;color:var(--muted);margin-top:3px}
 .conf-ring{position:relative;width:52px;height:52px}.conf-ring svg{transform:rotate(-90deg)}.conf-val{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-size:13px;font-weight:800}
-.bo-levels{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#0a0d0c}.bo-lv{padding:11px 6px;text-align:center;border-inline-start:1px solid var(--line)}.bo-lv:first-child{border-inline-start:0}.bo-lv-val{font-family:var(--mono);font-size:12px;font-weight:700;direction:ltr}.bo-lv-lbl{font-size:9px;color:var(--muted);margin-top:3px}.entry-v{color:var(--txt)}.tp-v{color:var(--buy)}.sl-v{color:var(--sell)}
+.bo-levels{display:grid;grid-template-columns:repeat(6,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#0a0d0c}.bo-lv{padding:11px 6px;text-align:center;border-inline-start:1px solid var(--line)}.bo-lv:first-child{border-inline-start:0}.bo-lv-val{font-family:var(--mono);font-size:12px;font-weight:700;direction:ltr}.bo-lv-lbl{font-size:9px;color:var(--muted);margin-top:3px}.entry-v{color:var(--txt)}.alert-v{color:var(--orange)}.tp-v{color:var(--buy)}.sl-v{color:var(--sell)}
 .bo-ema{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--line)}.bo-ema-i{padding:9px 6px;text-align:center;border-inline-start:1px solid var(--line)}.bo-ema-i:first-child{border-inline-start:0}.bo-ema-v{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--blue);direction:ltr}.bo-ema-l{font-size:9px;color:var(--muted);margin-top:2px}.bo-tags{padding-top:12px}
 .empty{grid-column:1/-1;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;border:1px dashed var(--line);border-radius:14px;color:var(--muted);text-align:center}.e-icon{width:54px;height:54px;border-radius:15px;background:var(--panel);display:grid;place-items:center;font-family:var(--mono);font-size:20px;color:var(--buy)}.e-title{font-size:16px;font-weight:700;color:var(--txt)}.e-sub{font-size:13px}
 .bot{position:fixed;z-index:210;bottom:16px;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 28px));display:flex;align-items:center;gap:8px;padding:7px;border:1px solid var(--line2);border-radius:14px;background:rgba(13,16,16,.92);backdrop-filter:blur(18px);box-shadow:0 18px 50px rgba(0,0,0,.45)}
@@ -168,10 +168,10 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .ch-date,.bo-type{font-size:9px}.ch-price{font-size:17px}.pills,.bo-tags{padding:0 14px 12px}.p{border-radius:4px;font-size:8px;padding:3px 6px}
 .p-level{font-family:var(--sans);font-size:10px}.p-level-setup{background:rgba(47,136,255,.10);color:#6aa7ff;border-color:rgba(47,136,255,.35)}.p-level-trend{background:rgba(255,138,76,.10);color:var(--orange);border-color:rgba(255,138,76,.35)}.p-level-confirmed{background:rgba(0,196,140,.10);color:var(--buy);border-color:rgba(0,196,140,.35)}.p-level-strong{background:rgba(138,124,255,.12);color:#a99eff;border-color:rgba(138,124,255,.38)}
 .cf,.bo-levels{background:#0a1525;border-color:#1b2b43}.cf-i,.bo-lv{border-color:#1b2b43}.bo-ema{border-color:#1b2b43}.bo-ema-i{border-color:#1b2b43}
-.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-stop{grid-column:span 3}.bo-lv-target{grid-column:span 2}.bo-lv-target .bo-lv-lbl{color:#6686ad}.bo-lv-target.t1 .bo-lv-val{color:#66a9ff}.bo-lv-target.t2 .bo-lv-val{color:#38d3a1}.bo-lv-target.t3 .bo-lv-val{color:#00e0a0}
+.bo-lv-entry,.bo-lv-alert,.bo-lv-stop{grid-column:span 2}.bo-lv-target{grid-column:span 2}.bo-lv-target .bo-lv-lbl{color:#6686ad}.bo-lv-target.t1 .bo-lv-val{color:#66a9ff}.bo-lv-target.t2 .bo-lv-val{color:#38d3a1}.bo-lv-target.t3 .bo-lv-val{color:#00e0a0}
 .empty{border-radius:7px;border-color:#213550}.e-icon{background:#101e32;color:var(--blue);border-radius:50%}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
-@media(min-width:621px){.bo-levels{grid-template-columns:repeat(5,1fr)}.bo-lv-entry,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
+@media(min-width:621px){.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-alert,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
 @media(max-width:900px){.command-bar{grid-template-columns:1fr auto}.bot{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){
   header{height:54px;padding-inline:13px}.shell{padding:12px 10px 20px}.command-bar{grid-template-columns:1fr auto;gap:8px}.page-title{font-size:17px}.page-title span{display:none}.info-bar{justify-content:flex-end}.update-box>span:nth-child(2){display:none}.bot{grid-column:1/-1}
@@ -526,6 +526,7 @@ function renderBO() {
     const confColor = level==='setup'?'var(--blue)':level==='trend'?'var(--orange)':level==='strong'?'var(--purple)':'var(--buy)';
     const rsiC = !s.rsi?'var(--muted)':s.rsi>60?'var(--buy)':s.rsi<40?'var(--sell)':'var(--blue)';
     const entry = level==='setup' && s.trigger!=null ? s.trigger : s.close;
+    const alertPrice = s.alertPrice ?? s.close;
     const entryLabel = level==='setup' ? 'Trigger' : 'Entry';
     const dir = buy ? 1 : -1;
     const t1 = s.t1 ?? +(entry + dir * s.atr).toFixed(2);
@@ -557,6 +558,7 @@ function renderBO() {
 
       <div class="bo-levels">
         <div class="bo-lv bo-lv-entry"><div class="bo-lv-val entry-v">$${entry}</div><div class="bo-lv-lbl">${entryLabel}</div></div>
+        <div class="bo-lv bo-lv-alert"><div class="bo-lv-val alert-v">$${alertPrice}</div><div class="bo-lv-lbl">سعر التنبيه</div></div>
         <div class="bo-lv bo-lv-stop"><div class="bo-lv-val sl-v">$${s.sl}</div><div class="bo-lv-lbl">SL · 1.5×ATR</div></div>
         <div class="bo-lv bo-lv-target t1"><div class="bo-lv-val">$${t1}</div><div class="bo-lv-lbl">T1 · 1×ATR</div></div>
         <div class="bo-lv bo-lv-target t2"><div class="bo-lv-val">$${t2}</div><div class="bo-lv-lbl">T2 · 2×ATR</div></div>
