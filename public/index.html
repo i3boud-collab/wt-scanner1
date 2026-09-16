@@ -313,6 +313,7 @@ let wtFilt  = 'all';
 let boFilt  = 'all';
 let srch    = '';
 const REFRESH = 5 * 60 * 1000;
+let scanInProgress = false;
 
 // ═══════════════════════════════════════════════════════════════
 // STRATEGY SWITCH
@@ -370,10 +371,36 @@ async function fetchData() {
   }
 }
 
+function isMarketOpen() {
+  const ny = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const mins = ny.getHours()*60+ny.getMinutes(), day=ny.getDay();
+  return day>=1&&day<=5&&mins>=570&&mins<960;
+}
+
+async function runLiveScan() {
+  if(scanInProgress) return;
+  scanInProgress = true;
+  document.getElementById('scanWrap').classList.add('on');
+  try {
+    // /api/signals only reads stored results; /api/scan creates fresh ones.
+    await fetch('/api/scan',{cache:'no-store'});
+  } catch(e) {
+    // Keep showing the last successful scan if the live request fails.
+  } finally {
+    scanInProgress = false;
+    document.getElementById('scanWrap').classList.remove('on');
+  }
+}
+
+async function refreshLive(forceScan=false) {
+  if(forceScan || isMarketOpen()) await runLiveScan();
+  await fetchData();
+}
+
 function manualRefresh() {
   const b = document.getElementById('rfBtn');
   b.classList.add('spinning');
-  fetchData().finally(()=>b.classList.remove('spinning'));
+  refreshLive(true).finally(()=>b.classList.remove('spinning'));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -604,9 +631,9 @@ window.addEventListener('DOMContentLoaded',()=>{
   updateMarket();
   setInterval(updateMarket, 30000);
   setTF('1h');
-  fetchData();
-  setInterval(fetchData, REFRESH);
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) fetchData(); });
+  refreshLive();
+  setInterval(refreshLive, REFRESH);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refreshLive(); });
 });
 </script>
 </body>
