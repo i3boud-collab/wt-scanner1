@@ -15,6 +15,19 @@ async function kvSet(key, value) {
   return true;
 }
 
+async function kvGet(key) {
+  const url   = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
+  if (!url || !token) return null;
+  const res = await fetch(`${url}/get/${key}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (!json.result) return null;
+  try { return JSON.parse(json.result); } catch { return null; }
+}
+
 // ── Fetch Yahoo Finance ─────────────────────────────────────────
 async function fetchYahoo(symbol, interval, range) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}&includePrePost=false`;
@@ -141,8 +154,12 @@ async function scanWT(interval, range, daysBack) {
 // ════════════════════════════════════════════════════════════════
 // STRATEGY 2: Breakout (EMA20/50/200 + ATR + Volume)
 // ════════════════════════════════════════════════════════════════
-async function scanBreakout() {
+async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toISOString()) {
   const signals = [], errors = [];
+  const previousByKey = new Map(previousSignals.map(signal => [
+    `${signal.symbol}-${signal.type}-${signal.level}-${signal.timestamp}`,
+    signal,
+  ]));
   // Breakout works best on daily timeframe
   const cutoffMs = Date.now() - 7 * 86400 * 1000; // آخر أسبوع
 
@@ -227,11 +244,15 @@ async function scanBreakout() {
         const t3    = +(entry + dir * 3 * atr).toFixed(2);
         const sl    = type === "buy"  ? +(entry - 1.5 * atr).toFixed(2) : +(entry + 1.5 * atr).toFixed(2);
 
+        const previous = previousByKey.get(`${sym}-${type}-${level}-${ts}`);
         signals.push({
           type, level, symbol: sym,
           date:       fmtDate(dates[i]),
           timestamp:  ts,
           close:      +close.toFixed(2),
+          // Freeze the underlying price when this exact signal is first detected.
+          alertPrice: previous?.alertPrice ?? +close.toFixed(2),
+          alertedAt:  previous?.alertedAt  ?? scanStartedAt,
           trigger:    trigger !== null ? +trigger.toFixed(2) : null,
           t1, t2, t3, tp: t3, sl,
           atr:        +atr.toFixed(2),
@@ -272,12 +293,13 @@ async function scanBreakout() {
 module.exports = async (req, res) => {
   try {
     const now = new Date().toISOString();
+    const previous = await kvGet("wt_signals");
 
     const [tf15m, tf1h, tf4h, breakout] = await Promise.all([
       scanWT("15m", "5d",  1),
       scanWT("1h",  "14d", 2),
       scanWT("4h",  "60d", 7),
-      scanBreakout(),
+      scanBreakout(previous?.breakout?.signals || [], now),
     ]);
 
     const result = {
