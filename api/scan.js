@@ -314,6 +314,147 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
 }
 
 // ════════════════════════════════════════════════════════════════
+// STRATEGY 3: Intraday fusion (5m execution + 15m trend)
+// Breakout: 12-bar range break with RSI/trend/volume confirmation
+// Reversal: WaveTrend cross near the 12-bar range edge
+// ════════════════════════════════════════════════════════════════
+async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toISOString()) {
+  const signals = [], errors = [];
+  const previousByKey = new Map(previousSignals.map(signal => [
+    `${signal.symbol}-${signal.type}-${signal.mode}-${signal.timestamp}`,
+    signal,
+  ]));
+  const cutoffMs = Date.now() - 45 * 60 * 1000;
+
+  for (const sym of SYMBOLS) {
+    try {
+      const [quotes5, quotes15] = await Promise.all([
+        fetchYahoo(sym, "5m", "5d"),
+        fetchYahoo(sym, "15m", "5d"),
+      ]);
+      if (quotes5.length < 60 || quotes15.length < 55) { errors.push(sym); continue; }
+
+      const closes = quotes5.map(q => q.close);
+      const highs = quotes5.map(q => q.high);
+      const lows = quotes5.map(q => q.low);
+      const volumes = quotes5.map(q => q.volume);
+      const dates = quotes5.map(q => q.date);
+      const rsiArr = calcRSI(closes, 14);
+      const atrArr = calcATR(highs, lows, closes, 14);
+      const { buys, sells } = calcWT(
+        highs, lows, closes,
+        CONFIG.WT_N1, CONFIG.WT_N2, CONFIG.WT_NSC, CONFIG.WT_NSV,
+      );
+      const wtBuys = new Set(buys);
+      const wtSells = new Set(sells);
+
+      const closes15 = quotes15.map(q => q.close);
+      const ema9_15 = calcEMA(closes15, 9);
+      const ema20_15 = calcEMA(closes15, 20);
+      const ema50_15 = calcEMA(closes15, 50);
+
+      // Ignore the still-forming candle; confirmations use closed candles only.
+      let last5 = quotes5.length - 1;
+      while (last5 >= 0 && dates[last5].getTime() + 5 * 60 * 1000 > Date.now()) last5--;
+      let last15 = quotes15.length - 1;
+      while (last15 >= 0 && quotes15[last15].date.getTime() + 15 * 60 * 1000 > Date.now()) last15--;
+      if (last5 < 50 || last15 < 50) continue;
+
+      const trendCall = ema9_15[last15] > ema20_15[last15] && closes15[last15] > ema20_15[last15];
+      const trendPut = ema9_15[last15] < ema20_15[last15] && closes15[last15] < ema20_15[last15];
+
+      // Keep signals from the six most recent completed 5m candles (30 minutes).
+      for (let i = Math.max(30, last5 - 5); i <= last5; i++) {
+        const ts = dates[i].getTime();
+        if (ts < cutoffMs) continue;
+
+        const close = closes[i];
+        const rsi = rsiArr[i];
+        const atr = atrArr[i];
+        if (rsi === null || !atr || atr <= 0) continue;
+
+        const prevHigh = Math.max(...highs.slice(i - 12, i));
+        const prevLow = Math.min(...lows.slice(i - 12, i));
+        const avgVol = volumes.slice(i - 20, i).reduce((sum, value) => sum + value, 0) / 20;
+        const highVol = avgVol > 0 && volumes[i] >= 1.3 * avgVol;
+
+        const breakoutCall = close > prevHigh && trendCall && rsi >= 55;
+        const breakoutPut = close < prevLow && trendPut && rsi <= 45;
+        const nearLow = lows[i] <= prevLow + 0.4 * atr;
+        const nearHigh = highs[i] >= prevHigh - 0.4 * atr;
+        const reversalCall = !breakoutCall && wtBuys.has(i) && nearLow && rsi <= 45 && close > closes[i - 1];
+        const reversalPut = !breakoutPut && wtSells.has(i) && nearHigh && rsi >= 55 && close < closes[i - 1];
+
+        let type = null, mode = null;
+        if (breakoutCall || breakoutPut) {
+          type = breakoutCall ? "buy" : "sell";
+          mode = "breakout";
+        } else if (reversalCall || reversalPut) {
+          type = reversalCall ? "buy" : "sell";
+          mode = "reversal";
+        }
+        if (!type) continue;
+
+        let confidence = mode === "breakout" ? 60 : 55;
+        if (highVol) confidence += 15;
+        if (type === "buy" ? rsi >= 60 || rsi <= 35 : rsi <= 40 || rsi >= 65) confidence += 15;
+        if (mode === "breakout" && (type === "buy" ? trendCall : trendPut)) confidence += 10;
+        if (mode === "reversal" && (type === "buy" ? nearLow : nearHigh)) confidence += 15;
+        confidence = Math.min(100, confidence);
+
+        const key = `${sym}-${type}-${mode}-${ts}`;
+        const previous = previousByKey.get(key);
+        const keepPlan = previous?.planVersion === "minute-v1";
+        const alertedAt = previous?.alertedAt ?? scanStartedAt;
+        const alertPrice = previous?.alertPrice ?? +close.toFixed(2);
+        const entry = keepPlan ? previous.entry : alertPrice;
+        const planAtr = keepPlan ? previous.atr : +atr.toFixed(2);
+        const dir = type === "buy" ? 1 : -1;
+        const t1 = keepPlan ? previous.t1 : +(entry + dir * 0.5 * planAtr).toFixed(2);
+        const t2 = keepPlan ? previous.t2 : +(entry + dir * 1.0 * planAtr).toFixed(2);
+        const t3 = keepPlan ? previous.t3 : +(entry + dir * 1.5 * planAtr).toFixed(2);
+        const sl = keepPlan ? previous.sl : +(entry - dir * 0.75 * planAtr).toFixed(2);
+
+        signals.push({
+          type, mode, symbol: sym,
+          level: confidence >= 85 ? "strong" : confidence >= 70 ? "confirmed" : "early",
+          date: fmtDate(alertedAt),
+          candleDate: fmtDate(dates[i]),
+          timestamp: ts,
+          alertedAt,
+          alertPrice,
+          entry,
+          t1, t2, t3, tp: t3, sl,
+          atr: planAtr,
+          atrTimeframe: "5m",
+          planVersion: "minute-v1",
+          confidence,
+          rsi: +rsi.toFixed(1),
+          volume: Math.round(volumes[i]),
+          avgVol: Math.round(avgVol),
+          highVol,
+          volConf: highVol,
+          ema9: +ema9_15[last15].toFixed(2),
+          ema20: +ema20_15[last15].toFixed(2),
+          ema50: +ema50_15[last15].toFixed(2),
+        });
+      }
+    } catch (e) { errors.push(`${sym}: ${e.message}`); }
+  }
+
+  signals.sort((a, b) => b.timestamp - a.timestamp);
+  const seen = new Set();
+  const unique = signals.filter(signal => {
+    const key = `${signal.symbol}-${signal.type}-${signal.mode}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  unique.sort((a, b) => b.confidence - a.confidence || b.timestamp - a.timestamp);
+  return { signals: unique, errorCount: errors.length };
+}
+
+// ════════════════════════════════════════════════════════════════
 // MAIN HANDLER
 // ════════════════════════════════════════════════════════════════
 module.exports = async (req, res) => {
@@ -322,11 +463,12 @@ module.exports = async (req, res) => {
     const now = new Date().toISOString();
     const previous = await kvGet("wt_signals");
 
-    const [tf15m, tf1h, tf4h, breakout] = await Promise.all([
+    const [tf15m, tf1h, tf4h, breakout, intraday] = await Promise.all([
       scanWT("15m", "5d",  1),
       scanWT("1h",  "14d", 2),
       scanWT("4h",  "60d", 7),
       scanBreakout(previous?.breakout?.signals || [], now),
+      scanIntraday(previous?.intraday?.signals || [], now),
     ]);
 
     const result = {
@@ -336,6 +478,7 @@ module.exports = async (req, res) => {
         "4h":  { signals: tf4h.signals,  errorCount: tf4h.errorCount  },
       },
       breakout: { signals: breakout.signals, errorCount: breakout.errorCount },
+      intraday: { signals: intraday.signals, errorCount: intraday.errorCount },
       updatedAt:   now,
       symbolCount: SYMBOLS.length,
     };
@@ -351,6 +494,9 @@ module.exports = async (req, res) => {
       breakout_setup: breakout.signals.filter(s => s.level === "setup").length,
       breakout_confirmed: breakout.signals.filter(s => s.level === "confirmed").length,
       breakout_strong: breakout.signals.filter(s => s.level === "strong").length,
+      intraday: intraday.signals.length,
+      intraday_breakout: intraday.signals.filter(s => s.mode === "breakout").length,
+      intraday_reversal: intraday.signals.filter(s => s.mode === "reversal").length,
       updated:  now,
     });
   } catch(e) {
