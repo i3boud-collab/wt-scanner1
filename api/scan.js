@@ -160,13 +160,15 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
     `${signal.symbol}-${signal.type}-${signal.level}-${signal.timestamp}`,
     signal,
   ]));
-  // Breakout works best on daily timeframe
-  const cutoffMs = Date.now() - 7 * 86400 * 1000; // آخر أسبوع
-
   for (const sym of SYMBOLS) {
     try {
-      const quotes = await fetchYahoo(sym, "1d", "2y");
-      if (quotes.length < 210) { errors.push(sym); continue; }
+      // Daily candles define the main trend/breakout. 15m candles size the
+      // trade plan so targets remain realistic for intraday options trading.
+      const [quotes, intradayQuotes] = await Promise.all([
+        fetchYahoo(sym, "1d", "2y"),
+        fetchYahoo(sym, "15m", "5d"),
+      ]);
+      if (quotes.length < 210 || intradayQuotes.length < 20) { errors.push(sym); continue; }
 
       const closes  = quotes.map(q => q.close);
       const highs   = quotes.map(q => q.high);
@@ -180,6 +182,14 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
       const atrArr = calcATR(highs, lows, closes, 14);
       const rsiArr = calcRSI(closes, 14);
 
+      const intradayCloses = intradayQuotes.map(q => q.close);
+      const intradayHighs  = intradayQuotes.map(q => q.high);
+      const intradayLows   = intradayQuotes.map(q => q.low);
+      const intradayAtrArr = calcATR(intradayHighs, intradayLows, intradayCloses, 14);
+      const intradayAtr    = [...intradayAtrArr].reverse().find(value => value !== null && value > 0);
+      const livePrice      = intradayCloses[intradayCloses.length - 1];
+      if (!intradayAtr || !livePrice) { errors.push(sym); continue; }
+
       // Rolling 20-period high/low
       const roll20High = closes.map((_, i) => i < 19 ? null : Math.max(...highs.slice(i-19, i)));
       const roll20Low  = closes.map((_, i) => i < 19 ? null : Math.min(...lows.slice(i-19, i)));
@@ -189,9 +199,9 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
         return volumes.slice(i-19, i+1).reduce((s,v)=>s+v,0)/20;
       });
 
-      for (let i = 200; i < closes.length; i++) {
+      // Day-trading view: evaluate only the current/latest market session.
+      for (let i = Math.max(200, closes.length - 1); i < closes.length; i++) {
         const ts = dates[i].getTime();
-        if (ts < cutoffMs) continue;
 
         const close   = closes[i];
         const atr     = atrArr[i];
@@ -237,15 +247,24 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
 
         if (!type) continue;
 
-        const entry = trigger || close;
-        const dir   = type === "buy" ? 1 : -1;
-        const t1    = +(entry + dir * atr).toFixed(2);
-        const t2    = +(entry + dir * 2 * atr).toFixed(2);
-        const t3    = +(entry + dir * 3 * atr).toFixed(2);
-        const sl    = type === "buy"  ? +(entry - 1.5 * atr).toFixed(2) : +(entry + 1.5 * atr).toFixed(2);
-
         const previous = previousByKey.get(`${sym}-${type}-${level}-${ts}`);
         const alertedAt = previous?.alertedAt ?? scanStartedAt;
+        const alertPrice = previous?.alertPrice ?? +livePrice.toFixed(2);
+        const keepPlan = previous?.planVersion === "intraday-v1";
+        // Setup enters at the trigger. Confirmed signals enter at the frozen
+        // alert price. Once created, the full plan never moves on refresh.
+        const entry = keepPlan
+          ? previous.entry
+          : +(trigger !== null ? trigger : alertPrice).toFixed(2);
+        const planAtr = keepPlan ? previous.atr : +intradayAtr.toFixed(2);
+        const dir = type === "buy" ? 1 : -1;
+        const t1 = keepPlan ? previous.t1 : +(entry + dir * 0.5 * planAtr).toFixed(2);
+        const t2 = keepPlan ? previous.t2 : +(entry + dir * 1.0 * planAtr).toFixed(2);
+        const t3 = keepPlan ? previous.t3 : +(entry + dir * 1.5 * planAtr).toFixed(2);
+        const sl = keepPlan
+          ? previous.sl
+          : +(entry - dir * 0.75 * planAtr).toFixed(2);
+
         signals.push({
           type, level, symbol: sym,
           // Show the real detection time, not Yahoo's daily-candle start time.
@@ -254,11 +273,15 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
           timestamp:  ts,
           close:      +close.toFixed(2),
           // Freeze the underlying price when this exact signal is first detected.
-          alertPrice: previous?.alertPrice ?? +close.toFixed(2),
+          alertPrice,
           alertedAt,
+          entry,
           trigger:    trigger !== null ? +trigger.toFixed(2) : null,
           t1, t2, t3, tp: t3, sl,
-          atr:        +atr.toFixed(2),
+          atr:        planAtr,
+          atrTimeframe: "15m",
+          dailyAtr:   +atr.toFixed(2),
+          planVersion: "intraday-v1",
           rsi:        rsi !== null ? +rsi.toFixed(1) : null,
           confidence,
           volume:     Math.round(volNow),
