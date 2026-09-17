@@ -148,6 +148,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .strat-tab{flex:0 0 auto;min-height:46px;padding:0 16px;border-radius:0;gap:8px;border-bottom:2px solid transparent}
 .strat-tab:hover{background:transparent;color:#dce7f7}.strat-tab.active{background:transparent;box-shadow:none;color:#fff;border-bottom-color:var(--blue)}
 .strat-tab.active::after{display:none}.strat-tab.s-bo.active{border-bottom-color:var(--blue)}
+.strat-tab.s-id.active{border-bottom-color:var(--purple)}.s-id .strat-icon{color:#a99eff;background:#1b203f}
 .strat-icon{width:25px;height:25px;border-radius:5px;background:#14243b;color:#7ca9e6;font-size:9px}.s-bo .strat-icon{background:#14243b;color:#7ca9e6}
 .strat-name{font-family:var(--sans);font-size:14px}.strat-desc{display:none}
 .tf-tabs{padding:10px 12px 0;gap:4px}.tf-tab{height:32px;min-width:68px;border-radius:5px;background:#0a1525;border-color:#1e304b;font-size:13px}
@@ -231,6 +232,10 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
     <span class="strat-icon">BO</span>
     <span><span class="strat-name">Breakout</span><span class="strat-desc">EMA · ATR · Confidence</span></span>
   </div>
+  <div class="strat-tab s-id" id="stab-id" onclick="setStrat('id')">
+    <span class="strat-icon">5M</span>
+    <span><span class="strat-name">لحظي</span><span class="strat-desc">Breakout · Reversal</span></span>
+  </div>
 </div>
 
 <!-- ══ WAVETREND SECTION ══ -->
@@ -287,6 +292,25 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
     <button class="f" onclick="setBOF(this,'vol')">فوليوم</button>
   </div>
 </div>
+
+<!-- ══ INTRADAY FUSION SECTION ══ -->
+<div class="tf-wrap" id="wrap-id">
+  <div class="stats">
+    <div class="sc g"><div class="sn" id="id-buy">0</div><div class="sl">CALL</div></div>
+    <div class="sc r"><div class="sn" id="id-sell">0</div><div class="sl">PUT</div></div>
+    <div class="sc b"><div class="sn" id="id-breakout">0</div><div class="sl">اختراق</div></div>
+    <div class="sc y"><div class="sn" id="id-reversal">0</div><div class="sl">انعكاس</div></div>
+  </div>
+  <div class="filters" id="filters-id">
+    <button class="f on" onclick="setIDF(this,'all')">الكل</button>
+    <button class="f" onclick="setIDF(this,'buy')">CALL ↑</button>
+    <button class="f" onclick="setIDF(this,'sell')">PUT ↓</button>
+    <button class="f" onclick="setIDF(this,'breakout')">اختراق لحظي</button>
+    <button class="f" onclick="setIDF(this,'reversal')">عكس اتجاه</button>
+    <button class="f" onclick="setIDF(this,'strong')">ثقة عالية</button>
+    <button class="f" onclick="setIDF(this,'vol')">فوليوم</button>
+  </div>
+</div>
 </section>
 
 <!-- CARDS -->
@@ -305,12 +329,14 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 // ═══════════════════════════════════════════════════════════════
 let data = {
   wt: { "15m":{signals:[]}, "1h":{signals:[]}, "4h":{signals:[]} },
-  breakout: { signals:[] }
+  breakout: { signals:[] },
+  intraday: { signals:[] }
 };
-let strat   = 'wt';   // 'wt' | 'bo'
+let strat   = 'wt';   // 'wt' | 'bo' | 'id'
 let curTF   = '1h';
 let wtFilt  = 'all';
 let boFilt  = 'all';
+let idFilt  = 'all';
 let srch    = '';
 const REFRESH = 5 * 60 * 1000;
 let scanInProgress = false;
@@ -322,8 +348,10 @@ function setStrat(s) {
   strat = s;
   document.getElementById('stab-wt').classList.toggle('active', s==='wt');
   document.getElementById('stab-bo').classList.toggle('active', s==='bo');
+  document.getElementById('stab-id').classList.toggle('active', s==='id');
   document.getElementById('wrap-wt').classList.toggle('active', s==='wt');
   document.getElementById('wrap-bo').classList.toggle('active', s==='bo');
+  document.getElementById('wrap-id').classList.toggle('active', s==='id');
   renderCards();
 }
 
@@ -358,6 +386,7 @@ async function fetchData() {
     data = {
       wt:       d.wt       || { "15m":{signals:[]}, "1h":{signals:[]}, "4h":{signals:[]} },
       breakout: d.breakout || { signals:[] },
+      intraday: d.intraday || { signals:[] },
     };
 
     ['15m','1h','4h'].forEach(tf => {
@@ -436,6 +465,13 @@ function renderStats() {
   const bHigh  = bo.filter(s=>s.level==='confirmed' || s.level==='strong').length;
   const bSetup = bo.filter(s=>s.level==='setup').length;
   anim('bo-buy',bBuy); anim('bo-sell',bSell); anim('bo-conf',bHigh); anim('bo-setup',bSetup);
+
+  // Intraday fusion stats
+  const id = data.intraday.signals;
+  anim('id-buy',id.filter(s=>s.type==='buy').length);
+  anim('id-sell',id.filter(s=>s.type==='sell').length);
+  anim('id-breakout',id.filter(s=>s.mode==='breakout').length);
+  anim('id-reversal',id.filter(s=>s.mode==='reversal').length);
 }
 
 function anim(id,target) {
@@ -466,6 +502,15 @@ function setBOF(btn, f) {
   renderCards();
 }
 
+function setIDF(btn, f) {
+  idFilt = f;
+  document.querySelectorAll('#filters-id .f').forEach(b=>b.classList.remove('on','on-buy','on-sell'));
+  btn.classList.add('on');
+  if(f==='buy')  btn.classList.add('on-buy');
+  if(f==='sell') btn.classList.add('on-sell');
+  renderCards();
+}
+
 function onSrch(v) { srch=v.trim(); renderCards(); }
 function fmtV(v) { if(!v) return '—'; if(v>=1e6) return (v/1e6).toFixed(1)+'M'; if(v>=1e3) return (v/1e3).toFixed(0)+'K'; return v; }
 
@@ -474,7 +519,8 @@ function fmtV(v) { if(!v) return '—'; if(v>=1e6) return (v/1e6).toFixed(1)+'M'
 // ═══════════════════════════════════════════════════════════════
 function renderCards() {
   if (strat === 'wt') renderWT();
-  else                renderBO();
+  else if (strat === 'bo') renderBO();
+  else renderIntraday();
 }
 
 // ── WaveTrend cards ─────────────────────────────────────────────
@@ -605,6 +651,77 @@ function renderBO() {
         ${level==='confirmed'||level==='strong'?'<span class="p p-gr">✓ CONFIRMED</span>':''}
         ${s.rsi!=null?`<span class="p p-gy" style="color:${rsiC}">RSI ${s.rsi}</span>`:''}
         <span class="p p-gy">ATR15 $${s.atr}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Intraday fusion cards ───────────────────────────────────────
+function renderIntraday() {
+  let sigs = [...data.intraday.signals];
+  if(idFilt==='buy')      sigs=sigs.filter(s=>s.type==='buy');
+  if(idFilt==='sell')     sigs=sigs.filter(s=>s.type==='sell');
+  if(idFilt==='breakout') sigs=sigs.filter(s=>s.mode==='breakout');
+  if(idFilt==='reversal') sigs=sigs.filter(s=>s.mode==='reversal');
+  if(idFilt==='strong')   sigs=sigs.filter(s=>s.confidence>=70);
+  if(idFilt==='vol')      sigs=sigs.filter(s=>s.highVol);
+  if(srch){ const q=srch.toUpperCase(); sigs=sigs.filter(s=>s.symbol.includes(q)); }
+
+  const wrap = document.getElementById('cards');
+  if(!sigs.length) { wrap.innerHTML=emptyHTML(data.intraday.signals.length); return; }
+
+  wrap.innerHTML = sigs.map((s,i)=>{
+    const buy = s.type==='buy';
+    const conf = s.confidence||0;
+    const modeText = s.mode==='breakout' ? 'اختراق لحظي' : 'انعكاس اتجاه';
+    const modeColor = s.mode==='breakout' ? 'var(--blue)' : 'var(--purple)';
+    const r = 22, circ = 2*Math.PI*r, dash = circ*(conf/100);
+    const rsiC = s.rsi>60?'var(--buy)':s.rsi<40?'var(--sell)':'var(--blue)';
+    return `
+    <div class="bo-card ${s.type}" style="animation-delay:${Math.min(i*25,300)}ms">
+      <div class="bo-head">
+        <div class="bo-left">
+          <div class="bo-icon">${buy?'↑':'↓'}</div>
+          <div>
+            <div class="bo-sym">${s.symbol}</div>
+            <div class="bo-type">${buy?'▲ CALL':'▼ PUT'} — ${modeText}</div>
+            <div class="bo-type" style="margin-top:2px">⏱ ${s.date} · إغلاق 5M</div>
+          </div>
+        </div>
+        <div class="bo-right">
+          <div class="conf-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52">
+              <circle cx="26" cy="26" r="${r}" fill="none" stroke="var(--s3)" stroke-width="4"/>
+              <circle cx="26" cy="26" r="${r}" fill="none" stroke="${modeColor}" stroke-width="4"
+                stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
+            </svg>
+            <div class="conf-val" style="color:${modeColor}">${conf}%</div>
+          </div>
+          <div style="text-align:center;font-size:8px;color:var(--muted);margin-top:2px;font-family:var(--mono)">CONF</div>
+        </div>
+      </div>
+
+      <div class="bo-levels">
+        <div class="bo-lv bo-lv-entry"><div class="bo-lv-val entry-v">$${s.entry}</div><div class="bo-lv-lbl">Entry ثابت</div></div>
+        <div class="bo-lv bo-lv-alert"><div class="bo-lv-val alert-v">$${s.alertPrice}</div><div class="bo-lv-lbl">سعر التنبيه</div></div>
+        <div class="bo-lv bo-lv-stop"><div class="bo-lv-val sl-v">$${s.sl}</div><div class="bo-lv-lbl">SL · 0.75×ATR5</div></div>
+        <div class="bo-lv bo-lv-target t1"><div class="bo-lv-val">$${s.t1}</div><div class="bo-lv-lbl">T1 · 0.5×ATR5</div></div>
+        <div class="bo-lv bo-lv-target t2"><div class="bo-lv-val">$${s.t2}</div><div class="bo-lv-lbl">T2 · 1×ATR5</div></div>
+        <div class="bo-lv bo-lv-target t3"><div class="bo-lv-val">$${s.t3}</div><div class="bo-lv-lbl">T3 · 1.5×ATR5</div></div>
+      </div>
+
+      <div class="bo-ema">
+        <div class="bo-ema-i"><div class="bo-ema-v">$${s.ema9}</div><div class="bo-ema-l">EMA 9 · 15M</div></div>
+        <div class="bo-ema-i"><div class="bo-ema-v">$${s.ema20}</div><div class="bo-ema-l">EMA 20 · 15M</div></div>
+        <div class="bo-ema-i"><div class="bo-ema-v">$${s.ema50}</div><div class="bo-ema-l">EMA 50 · 15M</div></div>
+      </div>
+
+      <div class="bo-tags">
+        <span class="p ${buy?'p-gb':'p-gs'}">${buy?'▲ CALL':'▼ PUT'}</span>
+        <span class="p" style="color:${modeColor};border-color:${modeColor}">${modeText}</span>
+        ${s.highVol?'<span class="p p-go">VOL ✓</span>':'<span class="p p-gy">VOL عادي</span>'}
+        <span class="p p-gy" style="color:${rsiC}">RSI ${s.rsi}</span>
+        <span class="p p-gy">ATR5 $${s.atr}</span>
       </div>
     </div>`;
   }).join('');
