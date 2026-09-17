@@ -552,13 +552,13 @@ function renderBO() {
     const dash = circ*(conf/100);
     const confColor = level==='setup'?'var(--blue)':level==='trend'?'var(--orange)':level==='strong'?'var(--purple)':'var(--buy)';
     const rsiC = !s.rsi?'var(--muted)':s.rsi>60?'var(--buy)':s.rsi<40?'var(--sell)':'var(--blue)';
-    const entry = level==='setup' && s.trigger!=null ? s.trigger : s.close;
+    const entry = s.entry ?? (level==='setup' && s.trigger!=null ? s.trigger : (s.alertPrice ?? s.close));
     const alertPrice = s.alertPrice ?? s.close;
     const entryLabel = level==='setup' ? 'Trigger' : 'Entry';
     const dir = buy ? 1 : -1;
-    const t1 = s.t1 ?? +(entry + dir * s.atr).toFixed(2);
-    const t2 = s.t2 ?? +(entry + dir * 2 * s.atr).toFixed(2);
-    const t3 = s.t3 ?? s.tp ?? +(entry + dir * 3 * s.atr).toFixed(2);
+    const t1 = s.t1 ?? +(entry + dir * 0.5 * s.atr).toFixed(2);
+    const t2 = s.t2 ?? +(entry + dir * 1.0 * s.atr).toFixed(2);
+    const t3 = s.t3 ?? s.tp ?? +(entry + dir * 1.5 * s.atr).toFixed(2);
     return `
     <div class="bo-card ${s.type} level-${level}" style="animation-delay:${Math.min(i*25,300)}ms">
       <div class="bo-head">
@@ -586,10 +586,10 @@ function renderBO() {
       <div class="bo-levels">
         <div class="bo-lv bo-lv-entry"><div class="bo-lv-val entry-v">$${entry}</div><div class="bo-lv-lbl">${entryLabel}</div></div>
         <div class="bo-lv bo-lv-alert"><div class="bo-lv-val alert-v">$${alertPrice}</div><div class="bo-lv-lbl">سعر التنبيه</div></div>
-        <div class="bo-lv bo-lv-stop"><div class="bo-lv-val sl-v">$${s.sl}</div><div class="bo-lv-lbl">SL · 1.5×ATR</div></div>
-        <div class="bo-lv bo-lv-target t1"><div class="bo-lv-val">$${t1}</div><div class="bo-lv-lbl">T1 · 1×ATR</div></div>
-        <div class="bo-lv bo-lv-target t2"><div class="bo-lv-val">$${t2}</div><div class="bo-lv-lbl">T2 · 2×ATR</div></div>
-        <div class="bo-lv bo-lv-target t3"><div class="bo-lv-val">$${t3}</div><div class="bo-lv-lbl">T3 · 3×ATR</div></div>
+        <div class="bo-lv bo-lv-stop"><div class="bo-lv-val sl-v">$${s.sl}</div><div class="bo-lv-lbl">SL · 0.75×ATR15</div></div>
+        <div class="bo-lv bo-lv-target t1"><div class="bo-lv-val">$${t1}</div><div class="bo-lv-lbl">T1 · 0.5×ATR15</div></div>
+        <div class="bo-lv bo-lv-target t2"><div class="bo-lv-val">$${t2}</div><div class="bo-lv-lbl">T2 · 1×ATR15</div></div>
+        <div class="bo-lv bo-lv-target t3"><div class="bo-lv-val">$${t3}</div><div class="bo-lv-lbl">T3 · 1.5×ATR15</div></div>
       </div>
 
       <div class="bo-ema">
@@ -604,7 +604,7 @@ function renderBO() {
         ${s.highVol?'<span class="p p-go">HIGH VOL</span>':''}
         ${level==='confirmed'||level==='strong'?'<span class="p p-gr">✓ CONFIRMED</span>':''}
         ${s.rsi!=null?`<span class="p p-gy" style="color:${rsiC}">RSI ${s.rsi}</span>`:''}
-        <span class="p p-gy">ATR $${s.atr}</span>
+        <span class="p p-gy">ATR15 $${s.atr}</span>
       </div>
     </div>`;
   }).join('');
