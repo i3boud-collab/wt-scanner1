@@ -895,7 +895,7 @@ function renderPreMarket(allItems) {
   if(srch){ const q=srch.toUpperCase(); items=items.filter(item=>item.symbol.includes(q)||item.name.toUpperCase().includes(q)); }
   const breadth = data.market.watchlistBreadth || {advancers:0,decliners:0,unchanged:0,total:0,averageChangePct:0,leaders:[],laggards:[]};
   const bias = breadth.advancers>breadth.decliners ? 'إيجابي' : breadth.decliners>breadth.advancers ? 'سلبي' : 'متوازن';
-  const gapRows = (rows, cls)=>rows.map(item=>`<div class="gapper-row"><span>${esc(item.symbol)}</span><span class="${cls}">${item.changePct>0?'+':''}${Number(item.changePct).toFixed(2)}%</span></div>`).join('') || '<div class="empty-mini">لا توجد بيانات</div>';
+  const gapRows = (rows, cls, emptyText)=>rows.map(item=>`<div class="gapper-row"><span>${esc(item.symbol)}</span><span class="${cls}">${item.changePct>0?'+':''}${Number(item.changePct).toFixed(2)}%</span></div>`).join('') || `<div class="empty-mini">${emptyText}</div>`;
   const wrap = document.getElementById('cards');
   wrap.innerHTML = `
     <div class="breadth-panel">
@@ -905,15 +905,15 @@ function renderPreMarket(allItems) {
       <div class="breadth-box"><div class="breadth-num">${bias}</div><div class="breadth-lbl">ميل الـPre-Market</div></div>
     </div>
     <div class="gappers">
-      <div class="gapper-list"><div class="gapper-title">أقوى فجوات صاعدة</div>${gapRows(breadth.leaders||[],'gapper-up')}</div>
-      <div class="gapper-list"><div class="gapper-title">أقوى فجوات هابطة</div>${gapRows(breadth.laggards||[],'gapper-down')}</div>
+      <div class="gapper-list"><div class="gapper-title">أعلى ارتفاع عن إغلاق أمس</div>${gapRows(breadth.leaders||[],'gapper-up','لا توجد أسهم صاعدة حالياً')}</div>
+      <div class="gapper-list"><div class="gapper-title">أكبر انخفاض عن إغلاق أمس</div>${gapRows(breadth.laggards||[],'gapper-down','لا توجد أسهم هابطة حالياً')}</div>
     </div>
     <details class="market-guide">
       <summary>كيف أقرأ ما قبل الافتتاح؟</summary>
       <div class="guide-grid">
         <div class="guide-item"><div class="guide-title">ES / NQ / YM / RTY</div><div class="guide-text">عقود S&P وناسداك والداو وRussell. اتفاقها يعطي اتجاهًا عامًا أقوى؛ اختلافها يعني سوقًا انتقائيًا.</div></div>
         <div class="guide-item"><div class="guide-title">US 10Y وDXY</div><div class="guide-text">ارتفاع العائد والدولار معًا قد يضغط خصوصًا على أسهم النمو والتقنية. راقب الاتجاه لا الرقم منفردًا.</div></div>
-        <div class="guide-item"><div class="guide-title">الفجوة والفوليوم</div><div class="guide-text">الفجوة تحدد حركة السهم من إغلاق أمس. لا تعتمد عليها دون سيولة وتأكيد بعد الافتتاح.</div></div>
+        <div class="guide-item"><div class="guide-title">الفرق عن إغلاق أمس</div><div class="guide-text">النسبة تقارن آخر سعر متاح في الـPre-Market بآخر إغلاق يومي مكتمل. الموجب ارتفاع والسالب انخفاض، ولا تعتبر وحدها إشارة دخول.</div></div>
       </div>
     </details>
     ${items.length?items.map(compactMarketCard).join(''):emptyHTML(0)}`;
