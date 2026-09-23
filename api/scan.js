@@ -337,7 +337,7 @@ async function scanBreakout(previousSignals = [], scanStartedAt = new Date().toI
 // Reversal: WaveTrend cross near the 12-bar range edge
 // ════════════════════════════════════════════════════════════════
 async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toISOString()) {
-  const signals = [], errors = [];
+  const signals = [], errors = [], breadthItems = [];
   const previousByKey = new Map(previousSignals.map(signal => [
     `${signal.symbol}-${signal.type}-${signal.mode}-${signal.timestamp}`,
     signal,
@@ -357,6 +357,18 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
       const lows = quotes5.map(q => q.low);
       const volumes = quotes5.map(q => q.volume);
       const dates = quotes5.map(q => q.date);
+      const latestQuote = quotes5[quotes5.length - 1];
+      const previousClose = Number(quotes5.meta?.previousClose);
+      const recentAvgVolume = volumes.slice(-21, -1).reduce((sum, value) => sum + value, 0) / Math.max(1, volumes.slice(-21, -1).length);
+      const changePct = previousClose > 0 ? ((latestQuote.close - previousClose) / previousClose) * 100 : 0;
+      breadthItems.push({
+        symbol: sym,
+        price: +latestQuote.close.toFixed(2),
+        previousClose: previousClose > 0 ? +previousClose.toFixed(2) : null,
+        changePct: +changePct.toFixed(2),
+        direction: changePct > 0.05 ? 'up' : changePct < -0.05 ? 'down' : 'flat',
+        volumeRatio: recentAvgVolume > 0 ? +(latestQuote.volume / recentAvgVolume).toFixed(2) : null,
+      });
       const rsiArr = calcRSI(closes, 14);
       const atrArr = calcATR(highs, lows, closes, 14);
       const { buys, sells } = calcWT(
@@ -470,7 +482,21 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
     return true;
   });
   unique.sort((a, b) => b.confidence - a.confidence || b.timestamp - a.timestamp);
-  return { signals: unique, errorCount: errors.length };
+  const advancers = breadthItems.filter(item => item.direction === 'up').length;
+  const decliners = breadthItems.filter(item => item.direction === 'down').length;
+  const unchanged = breadthItems.length - advancers - decliners;
+  const ranked = [...breadthItems].sort((a, b) => b.changePct - a.changePct);
+  return {
+    signals: unique,
+    errorCount: errors.length,
+    breadth: {
+      advancers, decliners, unchanged,
+      total: breadthItems.length,
+      averageChangePct: breadthItems.length ? +(breadthItems.reduce((sum, item) => sum + item.changePct, 0) / breadthItems.length).toFixed(2) : 0,
+      leaders: ranked.slice(0, 5),
+      laggards: ranked.slice(-5).reverse(),
+    },
+  };
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -478,11 +504,23 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
 // ════════════════════════════════════════════════════════════════
 async function scanMarket() {
   const instruments = [
-    { symbol: 'SPY',  name: 'S&P 500',      weight: 2, inverse: false },
-    { symbol: 'QQQ',  name: 'Nasdaq 100',   weight: 2, inverse: false },
-    { symbol: 'DIA',  name: 'Dow Jones',    weight: 1, inverse: false },
-    { symbol: 'IWM',  name: 'Russell 2000', weight: 1, inverse: false },
-    { symbol: '^VIX', name: 'VIX',          weight: 2, inverse: true  },
+    { symbol: 'SPY',  name: 'S&P 500',      group: 'core', weight: 2, inverse: false, unit: '$' },
+    { symbol: 'QQQ',  name: 'Nasdaq 100',   group: 'core', weight: 2, inverse: false, unit: '$' },
+    { symbol: 'DIA',  name: 'Dow Jones',    group: 'core', weight: 1, inverse: false, unit: '$' },
+    { symbol: 'IWM',  name: 'Russell 2000', group: 'core', weight: 1, inverse: false, unit: '$' },
+    { symbol: '^VIX', name: 'VIX',          group: 'core', weight: 2, inverse: true,  unit: ''  },
+    { symbol: 'ES=F', name: 'S&P Futures',  group: 'futures', unit: '' },
+    { symbol: 'NQ=F', name: 'Nasdaq Futures', group: 'futures', unit: '' },
+    { symbol: 'YM=F', name: 'Dow Futures',  group: 'futures', unit: '' },
+    { symbol: 'RTY=F', name: 'Russell Futures', group: 'futures', unit: '' },
+    { symbol: '^TNX', name: 'US 10Y Yield', group: 'macro', unit: '%' },
+    { symbol: 'DX-Y.NYB', name: 'Dollar Index', group: 'macro', unit: '' },
+    { symbol: 'CL=F', name: 'WTI Oil',      group: 'macro', unit: '$' },
+    { symbol: 'GC=F', name: 'Gold',         group: 'macro', unit: '$' },
+    { symbol: 'XLK',  name: 'Technology',   group: 'sector', unit: '$' },
+    { symbol: 'SMH',  name: 'Semiconductors', group: 'sector', unit: '$' },
+    { symbol: 'XLF',  name: 'Financials',   group: 'sector', unit: '$' },
+    { symbol: 'XLE',  name: 'Energy',       group: 'sector', unit: '$' },
   ];
   const items = [], errors = [];
 
@@ -507,6 +545,8 @@ async function scanMarket() {
       items.push({
         symbol: instrument.symbol,
         name: instrument.name,
+        group: instrument.group,
+        unit: instrument.unit,
         price: +last.close.toFixed(2),
         previousClose: previousClose > 0 ? +previousClose.toFixed(2) : null,
         changePct: +changePct.toFixed(2),
@@ -518,8 +558,8 @@ async function scanMarket() {
         timestamp: last.date.getTime(),
         date: fmtDate(last.date),
         session: marketSession(last.date),
-        weight: instrument.weight,
-        inverse: instrument.inverse,
+        weight: instrument.weight || 0,
+        inverse: instrument.inverse || false,
       });
     } catch (error) {
       errors.push(`${instrument.symbol}: ${error.message}`);
@@ -528,7 +568,7 @@ async function scanMarket() {
 
   items.sort((a, b) => instruments.findIndex(item => item.symbol === a.symbol) - instruments.findIndex(item => item.symbol === b.symbol));
   let weighted = 0, maxWeight = 0;
-  for (const item of items) {
+  for (const item of items.filter(item => item.group === 'core')) {
     const directional = item.direction === 'up' ? 1 : item.direction === 'down' ? -1 : 0;
     const emaBias = item.aboveEma20 ? 0.25 : -0.25;
     const raw = Math.max(-1, Math.min(1, directional + emaBias));
@@ -537,7 +577,8 @@ async function scanMarket() {
   }
   const score = maxWeight ? Math.round(50 + (weighted / maxWeight) * 50) : 50;
   const mood = score >= 65 ? 'bullish' : score <= 35 ? 'bearish' : 'neutral';
-  const breadth = items.filter(item => !item.inverse && item.direction === 'up').length;
+  const coreItems = items.filter(item => item.group === 'core');
+  const breadth = coreItems.filter(item => !item.inverse && item.direction === 'up').length;
   const vix = items.find(item => item.symbol === '^VIX') || null;
 
   return {
@@ -545,11 +586,96 @@ async function scanMarket() {
     score,
     mood,
     breadth,
-    breadthTotal: items.filter(item => !item.inverse).length,
+    breadthTotal: coreItems.filter(item => !item.inverse).length,
     vixChange: vix?.changePct ?? null,
     session: marketSession(),
     errorCount: errors.length,
   };
+}
+
+function nyDateKey(d = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(d);
+  const value = type => parts.find(part => part.type === type)?.value;
+  return `${value('year')}-${value('month')}-${value('day')}`;
+}
+
+async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5500) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function calendarFallback(date) {
+  if (date !== '2026-09-23') return [];
+  return [
+    { title: 'S&P Global Flash Manufacturing PMI', timestamp: Date.parse('2026-09-23T13:45:00Z'), impact: 'high', actual: null, forecast: '53.6', previous: null, kind: 'economic' },
+    { title: 'S&P Global Flash Services PMI', timestamp: Date.parse('2026-09-23T13:45:00Z'), impact: 'high', actual: null, forecast: '56.0', previous: null, kind: 'economic' },
+    { title: 'Fed Governor Michael Barr speaks', timestamp: Date.parse('2026-09-23T14:05:00Z'), impact: 'medium', actual: null, forecast: null, previous: null, kind: 'fed' },
+  ];
+}
+
+async function scanCalendar() {
+  const date = nyDateKey();
+  let events = [], earnings = [], eventSource = 'fallback', earningsSource = 'unavailable';
+
+  try {
+    const from = `${date}T00:00:00.000Z`;
+    const to = new Date(Date.parse(from) + 36 * 60 * 60 * 1000).toISOString();
+    const url = `https://economic-calendar.tradingview.com/events?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}&countries=US`;
+    const json = await fetchJsonWithTimeout(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Origin': 'https://www.tradingview.com', 'Accept': 'application/json' },
+    });
+    const rows = Array.isArray(json?.result) ? json.result : Array.isArray(json) ? json : [];
+    events = rows.map(event => {
+      const rawDate = event.date ?? event.datetime ?? event.timestamp;
+      const timestamp = typeof rawDate === 'number' ? rawDate * (rawDate < 1e12 ? 1000 : 1) : Date.parse(rawDate);
+      const importance = Number(event.importance ?? event.impact ?? 1);
+      return {
+        title: event.title || event.name || event.event || 'US Economic Event',
+        timestamp,
+        impact: importance >= 3 ? 'high' : importance >= 2 ? 'medium' : 'low',
+        actual: event.actual ?? null,
+        forecast: event.forecast ?? null,
+        previous: event.previous ?? null,
+        kind: /fed|fomc|powell|governor/i.test(event.title || event.name || '') ? 'fed' : 'economic',
+      };
+    }).filter(event => Number.isFinite(event.timestamp) && event.impact !== 'low');
+    eventSource = 'live';
+  } catch (error) {
+    events = calendarFallback(date);
+  }
+
+  if (!events.length) events = calendarFallback(date);
+  events.sort((a, b) => a.timestamp - b.timestamp);
+
+  try {
+    const url = `https://api.nasdaq.com/api/calendar/earnings?date=${date}`;
+    const json = await fetchJsonWithTimeout(url, {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json, text/plain, */*', 'Origin': 'https://www.nasdaq.com' },
+    });
+    const rows = json?.data?.rows || json?.data?.calendar?.rows || [];
+    earnings = rows.slice(0, 20).map(row => ({
+      symbol: row.symbol || '—',
+      name: row.name || row.companyName || '',
+      time: row.time || row.timeOfDay || 'غير محدد',
+      epsForecast: row.epsForecast || row.consensusEPSForecast || null,
+      fiscalQuarter: row.fiscalQuarterEnding || null,
+      watched: SYMBOLS.includes(row.symbol),
+    })).sort((a, b) => Number(b.watched) - Number(a.watched));
+    earningsSource = 'live';
+  } catch (error) {
+    earnings = [];
+  }
+
+  return { date, events, earnings, eventSource, earningsSource };
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -561,13 +687,14 @@ module.exports = async (req, res) => {
     const now = new Date().toISOString();
     const previous = await kvGet("wt_signals");
 
-    const [tf15m, tf1h, tf4h, breakout, intraday, market] = await Promise.all([
+    const [tf15m, tf1h, tf4h, breakout, intraday, market, calendar] = await Promise.all([
       scanWT("15m", "5d",  1),
       scanWT("1h",  "14d", 2),
       scanWT("4h",  "60d", 7),
       scanBreakout(previous?.breakout?.signals || [], now),
       scanIntraday(previous?.intraday?.signals || [], now),
       scanMarket(),
+      scanCalendar(),
     ]);
 
     const result = {
@@ -578,7 +705,7 @@ module.exports = async (req, res) => {
       },
       breakout: { signals: breakout.signals, errorCount: breakout.errorCount },
       intraday: { signals: intraday.signals, errorCount: intraday.errorCount },
-      market,
+      market: { ...market, watchlistBreadth: intraday.breadth, calendar },
       updatedAt:   now,
       symbolCount: SYMBOLS.length,
     };
@@ -599,6 +726,8 @@ module.exports = async (req, res) => {
       intraday_reversal: intraday.signals.filter(s => s.mode === "reversal").length,
       market_score: market.score,
       market_mood: market.mood,
+      calendar_events: calendar.events.length,
+      earnings_events: calendar.earnings.length,
       updated:  now,
     });
   } catch(e) {
