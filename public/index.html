@@ -174,10 +174,12 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .empty{border-radius:7px;border-color:#213550}.e-icon{background:#101e32;color:var(--blue);border-radius:50%}
 .market-summary{grid-column:1/-1;display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:1px;border:1px solid #243956;border-radius:7px;overflow:hidden;background:#243956}
 .market-summary>div{background:#0d192b;padding:15px}.market-summary .summary-main{display:flex;align-items:center;gap:12px}.mood-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px currentColor}.mood-dot.bullish{background:var(--buy)}.mood-dot.bearish{background:var(--sell)}
-.summary-value{font-family:var(--mono);font-size:20px;font-weight:700}.summary-label{font-size:10px;color:var(--muted);margin-top:4px}
+.summary-value{font-family:var(--mono);font-size:20px;font-weight:700}.summary-label{font-size:10px;color:var(--muted);margin-top:4px}.summary-help{font-size:9px;color:#5f7390;line-height:1.45;margin-top:6px}
+.market-insights{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.insight-card{border:1px solid #1f3451;border-radius:7px;background:#0d192b;padding:13px}.insight-title{font-size:10px;color:var(--muted)}.insight-value{font:700 15px/1.25 var(--mono);margin-top:7px}.insight-note{font-size:10px;color:#6f829e;line-height:1.5;margin-top:6px}
+.market-guide{grid-column:1/-1;border:1px solid #1f3451;border-radius:7px;background:#0b1728;overflow:hidden}.market-guide summary{cursor:pointer;list-style:none;padding:14px 16px;font-weight:700;color:#dbe8f8}.market-guide summary::-webkit-details-marker{display:none}.market-guide summary::before{content:'＋';color:var(--blue);margin-inline-end:8px}.market-guide[open] summary::before{content:'−'}.guide-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 12px 12px}.guide-item{padding:12px;border:1px solid #1c2e49;border-radius:6px;background:#0d192b}.guide-title{font-size:12px;font-weight:700;color:#d9e7f9}.guide-text{font-size:10px;color:#7e91ad;line-height:1.65;margin-top:5px}
 .market-card{border:1px solid #1c2d47;border-radius:7px;background:#0d192b;overflow:hidden;animation:rise .28s ease both}.market-card.up{box-shadow:inset 3px 0 0 var(--buy)}.market-card.down{box-shadow:inset 3px 0 0 var(--sell)}.market-card.flat{box-shadow:inset 3px 0 0 var(--gold)}
 .market-card-head{display:flex;justify-content:space-between;align-items:center;padding:16px}.market-symbol{font:800 19px/1 var(--mono);direction:ltr}.market-name{font-size:11px;color:var(--muted);margin-top:6px}.market-price{text-align:left;font:700 19px/1 var(--mono);direction:ltr}.market-change{font:700 13px/1 var(--mono);margin-top:7px}.market-change.up{color:var(--buy)}.market-change.down{color:var(--sell)}.market-change.flat{color:var(--gold)}
-.market-meta{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);background:#0a1525}.market-meta>div{padding:11px;text-align:center;border-inline-start:1px solid var(--line)}.market-meta>div:first-child{border-inline-start:0}
+.market-meta{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:#0a1525}.market-meta>div{padding:11px 5px;text-align:center;border-inline-start:1px solid var(--line)}.market-meta>div:first-child{border-inline-start:0}.market-reading{padding:10px 14px;border-top:1px solid var(--line);font-size:10px;color:#8194b0;line-height:1.5}.market-reading strong{color:#cfe0f5}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
 @media(min-width:621px){.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-alert,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
 @media(max-width:900px){.command-bar{grid-template-columns:1fr auto}.bot{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -186,6 +188,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
   .strat-tabs{padding-inline:6px;overflow-x:auto;scrollbar-width:none}.strat-tabs::-webkit-scrollbar{display:none}.strat-tab{flex:0 0 92px;justify-content:center;padding-inline:5px}.strat-icon{display:none}.strat-name{font-size:12px}.tf-tabs{display:grid}.stats{padding:8px}.sc{min-height:62px;padding:8px}.sn{font-size:18px}.sl{font-size:11px}.filters{padding-inline:8px}
   .cards{grid-template-columns:1fr}.card,.bo-card{border-radius:6px}
   .market-summary{grid-template-columns:1fr 1fr}.market-summary .summary-main{grid-column:1/-1}
+  .market-insights{grid-template-columns:1fr 1fr}.guide-grid{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -777,19 +780,52 @@ function renderMarket() {
 
   const moodText = {bullish:'صاعد',bearish:'هابط',neutral:'محايد'}[data.market.mood] || 'محايد';
   const sessionText = {pre:'PRE-MARKET',open:'OPEN',closed:'CLOSED'}[data.market.session] || 'CLOSED';
-  const vix = data.market.vixChange;
+  const equity = items.filter(item=>item.symbol!=='^VIX');
+  const vixItem = items.find(item=>item.symbol==='^VIX');
+  const strongest = [...equity].sort((a,b)=>b.changePct-a.changePct)[0];
+  const weakest = [...equity].sort((a,b)=>a.changePct-b.changePct)[0];
+  const spy = items.find(item=>item.symbol==='SPY');
+  const qqq = items.find(item=>item.symbol==='QQQ');
+  const techLead = spy&&qqq ? +(qqq.changePct-spy.changePct).toFixed(2) : null;
+  const riskMode = data.market.score>=65 && (vixItem?.changePct??0)<=0 ? 'شهية مخاطرة مرتفعة'
+    : data.market.score<=35 || (vixItem?.changePct??0)>=5 ? 'حذر مرتفع' : 'شهية مخاطرة متوازنة';
+  const vixZone = !vixItem ? 'غير متاح' : vixItem.price<15 ? 'تقلب منخفض' : vixItem.price<20 ? 'تقلب معتدل' : vixItem.price<30 ? 'تقلب مرتفع' : 'تقلب شديد';
   const summary = `
     <div class="market-summary">
       <div class="summary-main"><span class="mood-dot ${data.market.mood}"></span><div><div class="summary-value">السوق ${moodText}</div><div class="summary-label">قراءة سياق عامة وليست إشارة دخول</div></div></div>
-      <div><div class="summary-value">${data.market.score ?? 50}/100</div><div class="summary-label">درجة القوة</div></div>
-      <div><div class="summary-value">${data.market.breadth ?? 0}/${data.market.breadthTotal ?? 4}</div><div class="summary-label">اتساع الصعود</div></div>
-      <div><div class="summary-value">${sessionText}</div><div class="summary-label">جلسة نيويورك</div></div>
-    </div>`;
+      <div><div class="summary-value">${data.market.score ?? 50}/100</div><div class="summary-label">درجة القوة</div><div class="summary-help">65+ صاعد · 35− هابط · بينهما محايد</div></div>
+      <div><div class="summary-value">${data.market.breadth ?? 0}/${data.market.breadthTotal ?? 4}</div><div class="summary-label">اتساع الصعود</div><div class="summary-help">عدد المؤشرات المرتفعة عن إغلاق أمس</div></div>
+      <div><div class="summary-value">${sessionText}</div><div class="summary-label">جلسة نيويورك</div><div class="summary-help">PRE قبل 9:30 · OPEN حتى 4:00 ET</div></div>
+    </div>
+    <div class="market-insights">
+      <div class="insight-card"><div class="insight-title">شهية المخاطرة</div><div class="insight-value">${riskMode}</div><div class="insight-note">مزيج من اتجاه المؤشرات وحركة VIX</div></div>
+      <div class="insight-card"><div class="insight-title">الأقوى اليوم</div><div class="insight-value">${strongest?.symbol||'—'} ${strongest?`${strongest.changePct>0?'+':''}${strongest.changePct}%`:''}</div><div class="insight-note">أعلى تغير من الإغلاق السابق</div></div>
+      <div class="insight-card"><div class="insight-title">الأضعف اليوم</div><div class="insight-value">${weakest?.symbol||'—'} ${weakest?`${weakest.changePct>0?'+':''}${weakest.changePct}%`:''}</div><div class="insight-note">أقل تغير من الإغلاق السابق</div></div>
+      <div class="insight-card"><div class="insight-title">قيادة التقنية</div><div class="insight-value">${techLead==null?'—':`${techLead>0?'+':''}${techLead}%`}</div><div class="insight-note">فرق أداء QQQ عن SPY؛ الموجب يعني تفوق التقنية</div></div>
+    </div>
+    <details class="market-guide">
+      <summary>كيف أقرأ أرقام السوق؟</summary>
+      <div class="guide-grid">
+        <div class="guide-item"><div class="guide-title">درجة القوة</div><div class="guide-text">تجمع اتجاه SPY وQQQ بوزن أعلى، ثم DIA وIWM، وتعكس أثر VIX. يضاف ميل بسيط بحسب موقع السعر من EMA20. ليست نسبة احتمال نجاح الصفقة.</div></div>
+        <div class="guide-item"><div class="guide-title">VIX</div><div class="guide-text">يقيس توقع السوق للتقلب خلال نحو 30 يومًا من أسعار خيارات S&P 500. ارتفاعه يعني تقلبًا متوقعًا أكبر، وليس بالضرورة هبوطًا مؤكدًا.</div></div>
+        <div class="guide-item"><div class="guide-title">اتساع الصعود</div><div class="guide-text">4/4 يعني أن SPY وQQQ وDIA وIWM كلها أعلى من إغلاق أمس. كلما اتسع الصعود كان الاتجاه العام أقل اعتمادًا على مؤشر واحد.</div></div>
+        <div class="guide-item"><div class="guide-title">% التغير</div><div class="guide-text">الفرق بين السعر الحالي والإغلاق الرسمي السابق. في PRE يوضح فجوة ما قبل الافتتاح، وقد تتغير سريعًا بسبب انخفاض السيولة.</div></div>
+        <div class="guide-item"><div class="guide-title">EMA20 · 5M</div><div class="guide-text">متوسط أسي لآخر 20 شمعة خمس دقائق. فوقه = زخم لحظي إيجابي، وتحته = ضغط لحظي؛ لكنه ليس دعمًا أو مقاومة مضمونة.</div></div>
+        <div class="guide-item"><div class="guide-title">زخم 30 دقيقة</div><div class="guide-text">تغير السعر خلال آخر ست شمعات 5 دقائق. يفيد لمعرفة هل الحركة الحالية تتسارع أو تهدأ مقارنة باتجاه اليوم.</div></div>
+      </div>
+    </details>`;
 
   wrap.innerHTML = summary + items.map((item,i)=>{
     const direction = item.direction || 'flat';
     const arrow = direction==='up'?'▲':direction==='down'?'▼':'●';
     const change = `${item.changePct>0?'+':''}${Number(item.changePct).toFixed(2)}%`;
+    const emaDistance = item.emaDistancePct ?? ((item.price-item.ema20)/item.ema20*100);
+    const momentum = item.momentum30mPct ?? 0;
+    const reading = item.symbol==='^VIX'
+      ? `${vixZone}. ارتفاع VIX يرفع تكلفة التقلب في عقود الأوبشن غالبًا، لكنه لا يحدد اتجاه السوق وحده.`
+      : direction==='up'&&item.aboveEma20 ? 'اتجاه اليوم والزخم اللحظي متوافقان صعودًا.'
+      : direction==='down'&&!item.aboveEma20 ? 'اتجاه اليوم والزخم اللحظي متوافقان هبوطًا.'
+      : 'قراءة مختلطة: اتجاه اليوم وموقع السعر من EMA20 غير متوافقين.';
     return `
     <div class="market-card ${direction}" style="animation-delay:${Math.min(i*30,180)}ms">
       <div class="market-card-head">
@@ -797,9 +833,11 @@ function renderMarket() {
         <div><div class="market-price">$${Number(item.price).toFixed(2)}</div><div class="market-change ${direction}">${arrow} ${change}</div></div>
       </div>
       <div class="market-meta">
-        <div><div class="bo-ema-v">$${Number(item.ema20).toFixed(2)}</div><div class="bo-ema-l">EMA20 · 5M</div></div>
-        <div><div class="bo-ema-v" style="color:${item.aboveEma20?'var(--buy)':'var(--sell)'}">${item.aboveEma20?'فوق المتوسط':'تحت المتوسط'}</div><div class="bo-ema-l">${(item.session||'closed').toUpperCase()} · ${item.date}</div></div>
+        <div><div class="bo-ema-v">$${item.previousClose==null?'—':Number(item.previousClose).toFixed(2)}</div><div class="bo-ema-l">إغلاق أمس</div></div>
+        <div><div class="bo-ema-v" style="color:${item.aboveEma20?'var(--buy)':'var(--sell)'}">${emaDistance>0?'+':''}${Number(emaDistance).toFixed(2)}%</div><div class="bo-ema-l">عن EMA20 ($${Number(item.ema20).toFixed(2)})</div></div>
+        <div><div class="bo-ema-v" style="color:${momentum>=0?'var(--buy)':'var(--sell)'}">${momentum>0?'+':''}${Number(momentum).toFixed(2)}%</div><div class="bo-ema-l">زخم 30 دقيقة</div></div>
       </div>
+      <div class="market-reading"><strong>${(item.session||'closed').toUpperCase()} · ${item.date}</strong><br>${reading}</div>
     </div>`;
   }).join('');
 }
