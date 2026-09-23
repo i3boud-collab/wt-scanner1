@@ -149,6 +149,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .strat-tab:hover{background:transparent;color:#dce7f7}.strat-tab.active{background:transparent;box-shadow:none;color:#fff;border-bottom-color:var(--blue)}
 .strat-tab.active::after{display:none}.strat-tab.s-bo.active{border-bottom-color:var(--blue)}
 .strat-tab.s-id.active{border-bottom-color:var(--purple)}.s-id .strat-icon{color:#a99eff;background:#1b203f}
+.strat-tab.s-mkt.active{border-bottom-color:var(--gold)}.s-mkt .strat-icon{color:var(--gold);background:#282317}
 .strat-icon{width:25px;height:25px;border-radius:5px;background:#14243b;color:#7ca9e6;font-size:9px}.s-bo .strat-icon{background:#14243b;color:#7ca9e6}
 .strat-name{font-family:var(--sans);font-size:14px}.strat-desc{display:none}
 .tf-tabs{padding:10px 12px 0;gap:4px}.tf-tab{height:32px;min-width:68px;border-radius:5px;background:#0a1525;border-color:#1e304b;font-size:13px}
@@ -171,13 +172,20 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .cf,.bo-levels{background:#0a1525;border-color:#1b2b43}.cf-i,.bo-lv{border-color:#1b2b43}.bo-ema{border-color:#1b2b43}.bo-ema-i{border-color:#1b2b43}
 .bo-lv-entry,.bo-lv-alert,.bo-lv-stop{grid-column:span 2}.bo-lv-target{grid-column:span 2}.bo-lv-target .bo-lv-lbl{color:#6686ad}.bo-lv-target.t1 .bo-lv-val{color:#66a9ff}.bo-lv-target.t2 .bo-lv-val{color:#38d3a1}.bo-lv-target.t3 .bo-lv-val{color:#00e0a0}
 .empty{border-radius:7px;border-color:#213550}.e-icon{background:#101e32;color:var(--blue);border-radius:50%}
+.market-summary{grid-column:1/-1;display:grid;grid-template-columns:1.2fr repeat(3,1fr);gap:1px;border:1px solid #243956;border-radius:7px;overflow:hidden;background:#243956}
+.market-summary>div{background:#0d192b;padding:15px}.market-summary .summary-main{display:flex;align-items:center;gap:12px}.mood-dot{width:11px;height:11px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px currentColor}.mood-dot.bullish{background:var(--buy)}.mood-dot.bearish{background:var(--sell)}
+.summary-value{font-family:var(--mono);font-size:20px;font-weight:700}.summary-label{font-size:10px;color:var(--muted);margin-top:4px}
+.market-card{border:1px solid #1c2d47;border-radius:7px;background:#0d192b;overflow:hidden;animation:rise .28s ease both}.market-card.up{box-shadow:inset 3px 0 0 var(--buy)}.market-card.down{box-shadow:inset 3px 0 0 var(--sell)}.market-card.flat{box-shadow:inset 3px 0 0 var(--gold)}
+.market-card-head{display:flex;justify-content:space-between;align-items:center;padding:16px}.market-symbol{font:800 19px/1 var(--mono);direction:ltr}.market-name{font-size:11px;color:var(--muted);margin-top:6px}.market-price{text-align:left;font:700 19px/1 var(--mono);direction:ltr}.market-change{font:700 13px/1 var(--mono);margin-top:7px}.market-change.up{color:var(--buy)}.market-change.down{color:var(--sell)}.market-change.flat{color:var(--gold)}
+.market-meta{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);background:#0a1525}.market-meta>div{padding:11px;text-align:center;border-inline-start:1px solid var(--line)}.market-meta>div:first-child{border-inline-start:0}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
 @media(min-width:621px){.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-alert,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
 @media(max-width:900px){.command-bar{grid-template-columns:1fr auto}.bot{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){
   header{height:54px;padding-inline:13px}.shell{padding:12px 10px 20px}.command-bar{grid-template-columns:1fr auto;gap:8px}.page-title{font-size:17px}.page-title span{display:none}.info-bar{justify-content:flex-end}.update-box>span:nth-child(2){display:none}.bot{grid-column:1/-1}
-  .strat-tabs{padding-inline:6px}.strat-tab{flex:1;justify-content:center;padding-inline:6px}.tf-tabs{display:grid}.stats{padding:8px}.sc{min-height:62px;padding:8px}.sn{font-size:18px}.sl{font-size:11px}.filters{padding-inline:8px}
+  .strat-tabs{padding-inline:6px;overflow-x:auto;scrollbar-width:none}.strat-tabs::-webkit-scrollbar{display:none}.strat-tab{flex:0 0 92px;justify-content:center;padding-inline:5px}.strat-icon{display:none}.strat-name{font-size:12px}.tf-tabs{display:grid}.stats{padding:8px}.sc{min-height:62px;padding:8px}.sn{font-size:18px}.sl{font-size:11px}.filters{padding-inline:8px}
   .cards{grid-template-columns:1fr}.card,.bo-card{border-radius:6px}
+  .market-summary{grid-template-columns:1fr 1fr}.market-summary .summary-main{grid-column:1/-1}
 }
 </style>
 </head>
@@ -235,6 +243,10 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
   <div class="strat-tab s-id" id="stab-id" onclick="setStrat('id')">
     <span class="strat-icon">5M</span>
     <span><span class="strat-name">لحظي</span><span class="strat-desc">Breakout · Reversal</span></span>
+  </div>
+  <div class="strat-tab s-mkt" id="stab-mkt" onclick="setStrat('mkt')">
+    <span class="strat-icon">MKT</span>
+    <span><span class="strat-name">السوق</span><span class="strat-desc">Indices · VIX · Breadth</span></span>
   </div>
 </div>
 
@@ -311,11 +323,25 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
     <button class="f" onclick="setIDF(this,'vol')">فوليوم</button>
   </div>
 </div>
+
+<!-- ══ MARKET OVERVIEW SECTION ══ -->
+<div class="tf-wrap" id="wrap-mkt">
+  <div class="stats">
+    <div class="sc y"><div class="sn" id="mkt-mood">—</div><div class="sl">وضع السوق</div></div>
+    <div class="sc b"><div class="sn" id="mkt-score">50</div><div class="sl">القوة / 100</div></div>
+    <div class="sc g"><div class="sn" id="mkt-up">0/4</div><div class="sl">مؤشرات صاعدة</div></div>
+    <div class="sc r"><div class="sn" id="mkt-vix">—</div><div class="sl">تغير VIX</div></div>
+  </div>
+  <div class="filters">
+    <span class="f on" style="pointer-events:none">SPY · QQQ · DIA · IWM · VIX</span>
+    <span class="f" id="mkt-session" style="pointer-events:none">SESSION —</span>
+  </div>
+</div>
 </section>
 
 <!-- CARDS -->
 <div class="results-head">
-  <div class="results-title">الإشارات المكتشفة</div>
+  <div class="results-title" id="resultsTitle">الإشارات المكتشفة</div>
   <div class="results-note">AUTO REFRESH · 5 MIN</div>
 </div>
 <div class="cards" id="cards"></div>
@@ -330,9 +356,10 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 let data = {
   wt: { "15m":{signals:[]}, "1h":{signals:[]}, "4h":{signals:[]} },
   breakout: { signals:[] },
-  intraday: { signals:[] }
+  intraday: { signals:[] },
+  market: { items:[], score:50, mood:'neutral', breadth:0, breadthTotal:4, vixChange:null, session:'closed' }
 };
-let strat   = 'wt';   // 'wt' | 'bo' | 'id'
+let strat   = 'wt';   // 'wt' | 'bo' | 'id' | 'mkt'
 let curTF   = '1h';
 let wtFilt  = 'all';
 let boFilt  = 'all';
@@ -349,9 +376,12 @@ function setStrat(s) {
   document.getElementById('stab-wt').classList.toggle('active', s==='wt');
   document.getElementById('stab-bo').classList.toggle('active', s==='bo');
   document.getElementById('stab-id').classList.toggle('active', s==='id');
+  document.getElementById('stab-mkt').classList.toggle('active', s==='mkt');
   document.getElementById('wrap-wt').classList.toggle('active', s==='wt');
   document.getElementById('wrap-bo').classList.toggle('active', s==='bo');
   document.getElementById('wrap-id').classList.toggle('active', s==='id');
+  document.getElementById('wrap-mkt').classList.toggle('active', s==='mkt');
+  document.getElementById('resultsTitle').textContent = s==='mkt' ? 'وضع السوق العام' : 'الإشارات المكتشفة';
   renderCards();
 }
 
@@ -387,6 +417,7 @@ async function fetchData() {
       wt:       d.wt       || { "15m":{signals:[]}, "1h":{signals:[]}, "4h":{signals:[]} },
       breakout: d.breakout || { signals:[] },
       intraday: d.intraday || { signals:[] },
+      market:   d.market   || { items:[], score:50, mood:'neutral', breadth:0, breadthTotal:4, vixChange:null, session:'closed' },
     };
 
     ['15m','1h','4h'].forEach(tf => {
@@ -400,10 +431,10 @@ async function fetchData() {
   }
 }
 
-function isMarketOpen() {
+function isMarketScanWindow() {
   const ny = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
   const mins = ny.getHours()*60+ny.getMinutes(), day=ny.getDay();
-  return day>=1&&day<=5&&mins>=570&&mins<960;
+  return day>=1&&day<=5&&mins>=240&&mins<960;
 }
 
 async function runLiveScan() {
@@ -422,7 +453,7 @@ async function runLiveScan() {
 }
 
 async function refreshLive(forceScan=false) {
-  if(forceScan || isMarketOpen()) await runLiveScan();
+  if(forceScan || isMarketScanWindow()) await runLiveScan();
   await fetchData();
 }
 
@@ -472,6 +503,15 @@ function renderStats() {
   anim('id-sell',id.filter(s=>s.type==='sell').length);
   anim('id-breakout',id.filter(s=>s.mode==='breakout').length);
   anim('id-reversal',id.filter(s=>s.mode==='reversal').length);
+
+  // Overall market context (not a trade signal)
+  const market = data.market;
+  const moodText = { bullish:'صاعد', bearish:'هابط', neutral:'محايد' }[market.mood] || '—';
+  document.getElementById('mkt-mood').textContent = moodText;
+  document.getElementById('mkt-score').textContent = market.score ?? 50;
+  document.getElementById('mkt-up').textContent = `${market.breadth ?? 0}/${market.breadthTotal ?? 4}`;
+  document.getElementById('mkt-vix').textContent = market.vixChange == null ? '—' : `${market.vixChange>0?'+':''}${market.vixChange}%`;
+  document.getElementById('mkt-session').textContent = `SESSION ${(market.session || 'closed').toUpperCase()}`;
 }
 
 function anim(id,target) {
@@ -520,7 +560,8 @@ function fmtV(v) { if(!v) return '—'; if(v>=1e6) return (v/1e6).toFixed(1)+'M'
 function renderCards() {
   if (strat === 'wt') renderWT();
   else if (strat === 'bo') renderBO();
-  else renderIntraday();
+  else if (strat === 'id') renderIntraday();
+  else renderMarket();
 }
 
 // ── WaveTrend cards ─────────────────────────────────────────────
@@ -685,7 +726,7 @@ function renderIntraday() {
           <div>
             <div class="bo-sym">${s.symbol}</div>
             <div class="bo-type">${buy?'▲ CALL':'▼ PUT'} — ${modeText}</div>
-            <div class="bo-type" style="margin-top:2px">⏱ ${s.date} · إغلاق 5M</div>
+            <div class="bo-type" style="margin-top:2px">⏱ ${s.date} · إغلاق 5M · ${(s.session||'open').toUpperCase()}</div>
           </div>
         </div>
         <div class="bo-right">
@@ -722,6 +763,42 @@ function renderIntraday() {
         ${s.highVol?'<span class="p p-go">VOL ✓</span>':'<span class="p p-gy">VOL عادي</span>'}
         <span class="p p-gy" style="color:${rsiC}">RSI ${s.rsi}</span>
         <span class="p p-gy">ATR5 $${s.atr}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Overall market cards ───────────────────────────────────────
+function renderMarket() {
+  let items = [...(data.market.items || [])];
+  if(srch){ const q=srch.toUpperCase(); items=items.filter(item=>item.symbol.includes(q)||item.name.toUpperCase().includes(q)); }
+  const wrap = document.getElementById('cards');
+  if(!items.length) { wrap.innerHTML=emptyHTML((data.market.items||[]).length); return; }
+
+  const moodText = {bullish:'صاعد',bearish:'هابط',neutral:'محايد'}[data.market.mood] || 'محايد';
+  const sessionText = {pre:'PRE-MARKET',open:'OPEN',closed:'CLOSED'}[data.market.session] || 'CLOSED';
+  const vix = data.market.vixChange;
+  const summary = `
+    <div class="market-summary">
+      <div class="summary-main"><span class="mood-dot ${data.market.mood}"></span><div><div class="summary-value">السوق ${moodText}</div><div class="summary-label">قراءة سياق عامة وليست إشارة دخول</div></div></div>
+      <div><div class="summary-value">${data.market.score ?? 50}/100</div><div class="summary-label">درجة القوة</div></div>
+      <div><div class="summary-value">${data.market.breadth ?? 0}/${data.market.breadthTotal ?? 4}</div><div class="summary-label">اتساع الصعود</div></div>
+      <div><div class="summary-value">${sessionText}</div><div class="summary-label">جلسة نيويورك</div></div>
+    </div>`;
+
+  wrap.innerHTML = summary + items.map((item,i)=>{
+    const direction = item.direction || 'flat';
+    const arrow = direction==='up'?'▲':direction==='down'?'▼':'●';
+    const change = `${item.changePct>0?'+':''}${Number(item.changePct).toFixed(2)}%`;
+    return `
+    <div class="market-card ${direction}" style="animation-delay:${Math.min(i*30,180)}ms">
+      <div class="market-card-head">
+        <div><div class="market-symbol">${item.symbol}</div><div class="market-name">${item.name}</div></div>
+        <div><div class="market-price">$${Number(item.price).toFixed(2)}</div><div class="market-change ${direction}">${arrow} ${change}</div></div>
+      </div>
+      <div class="market-meta">
+        <div><div class="bo-ema-v">$${Number(item.ema20).toFixed(2)}</div><div class="bo-ema-l">EMA20 · 5M</div></div>
+        <div><div class="bo-ema-v" style="color:${item.aboveEma20?'var(--buy)':'var(--sell)'}">${item.aboveEma20?'فوق المتوسط':'تحت المتوسط'}</div><div class="bo-ema-l">${(item.session||'closed').toUpperCase()} · ${item.date}</div></div>
       </div>
     </div>`;
   }).join('');
