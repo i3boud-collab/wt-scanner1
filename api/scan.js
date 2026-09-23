@@ -29,8 +29,8 @@ async function kvGet(key) {
 }
 
 // ── Fetch Yahoo Finance ─────────────────────────────────────────
-async function fetchYahoo(symbol, interval, range) {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=${interval}&range=${range}&includePrePost=false`;
+async function fetchYahoo(symbol, interval, range, includePrePost = false) {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=${includePrePost ? "true" : "false"}`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" },
   });
@@ -56,6 +56,10 @@ async function fetchYahoo(symbol, interval, range) {
       });
     }
   }
+  valid.meta = {
+    previousClose: result.meta?.chartPreviousClose ?? result.meta?.previousClose ?? null,
+    regularMarketPrice: result.meta?.regularMarketPrice ?? null,
+  };
   return valid;
 }
 
@@ -97,6 +101,20 @@ function fmtDate(d) {
     day:'2-digit', month:'2-digit',
     hour:'2-digit', minute:'2-digit', hour12: false
   });
+}
+
+function marketSession(d = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', weekday: 'short', hour: '2-digit',
+    minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date(d));
+  const value = type => parts.find(part => part.type === type)?.value;
+  const weekday = value('weekday');
+  const mins = Number(value('hour')) * 60 + Number(value('minute'));
+  if (!['Mon', 'Tue', 'Wed', 'Thu', 'Fri'].includes(weekday)) return 'closed';
+  if (mins >= 240 && mins < 570) return 'pre';
+  if (mins >= 570 && mins < 960) return 'open';
+  return 'closed';
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -329,8 +347,8 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
   for (const sym of SYMBOLS) {
     try {
       const [quotes5, quotes15] = await Promise.all([
-        fetchYahoo(sym, "5m", "5d"),
-        fetchYahoo(sym, "15m", "5d"),
+        fetchYahoo(sym, "5m", "5d", true),
+        fetchYahoo(sym, "15m", "5d", true),
       ]);
       if (quotes5.length < 60 || quotes15.length < 55) { errors.push(sym); continue; }
 
@@ -421,6 +439,7 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
           date: fmtDate(alertedAt),
           candleDate: fmtDate(dates[i]),
           timestamp: ts,
+          session: marketSession(dates[i]),
           alertedAt,
           alertPrice,
           entry,
@@ -455,6 +474,76 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
 }
 
 // ════════════════════════════════════════════════════════════════
+// MARKET OVERVIEW: broad US index ETFs + volatility
+// ════════════════════════════════════════════════════════════════
+async function scanMarket() {
+  const instruments = [
+    { symbol: 'SPY',  name: 'S&P 500',      weight: 2, inverse: false },
+    { symbol: 'QQQ',  name: 'Nasdaq 100',   weight: 2, inverse: false },
+    { symbol: 'DIA',  name: 'Dow Jones',    weight: 1, inverse: false },
+    { symbol: 'IWM',  name: 'Russell 2000', weight: 1, inverse: false },
+    { symbol: '^VIX', name: 'VIX',          weight: 2, inverse: true  },
+  ];
+  const items = [], errors = [];
+
+  await Promise.all(instruments.map(async instrument => {
+    try {
+      const quotes = await fetchYahoo(instrument.symbol, '5m', '5d', true);
+      if (quotes.length < 20) throw new Error('Insufficient data');
+      const closes = quotes.map(quote => quote.close);
+      const last = quotes[quotes.length - 1];
+      const previousClose = Number(quotes.meta?.previousClose);
+      const ema20 = calcEMA(closes, 20).at(-1);
+      const changePct = previousClose > 0
+        ? ((last.close - previousClose) / previousClose) * 100
+        : 0;
+      items.push({
+        symbol: instrument.symbol,
+        name: instrument.name,
+        price: +last.close.toFixed(2),
+        previousClose: previousClose > 0 ? +previousClose.toFixed(2) : null,
+        changePct: +changePct.toFixed(2),
+        ema20: +ema20.toFixed(2),
+        aboveEma20: last.close >= ema20,
+        direction: changePct > 0.05 ? 'up' : changePct < -0.05 ? 'down' : 'flat',
+        timestamp: last.date.getTime(),
+        date: fmtDate(last.date),
+        session: marketSession(last.date),
+        weight: instrument.weight,
+        inverse: instrument.inverse,
+      });
+    } catch (error) {
+      errors.push(`${instrument.symbol}: ${error.message}`);
+    }
+  }));
+
+  items.sort((a, b) => instruments.findIndex(item => item.symbol === a.symbol) - instruments.findIndex(item => item.symbol === b.symbol));
+  let weighted = 0, maxWeight = 0;
+  for (const item of items) {
+    const directional = item.direction === 'up' ? 1 : item.direction === 'down' ? -1 : 0;
+    const emaBias = item.aboveEma20 ? 0.25 : -0.25;
+    const raw = Math.max(-1, Math.min(1, directional + emaBias));
+    weighted += (item.inverse ? -raw : raw) * item.weight;
+    maxWeight += item.weight;
+  }
+  const score = maxWeight ? Math.round(50 + (weighted / maxWeight) * 50) : 50;
+  const mood = score >= 65 ? 'bullish' : score <= 35 ? 'bearish' : 'neutral';
+  const breadth = items.filter(item => !item.inverse && item.direction === 'up').length;
+  const vix = items.find(item => item.symbol === '^VIX') || null;
+
+  return {
+    items,
+    score,
+    mood,
+    breadth,
+    breadthTotal: items.filter(item => !item.inverse).length,
+    vixChange: vix?.changePct ?? null,
+    session: marketSession(),
+    errorCount: errors.length,
+  };
+}
+
+// ════════════════════════════════════════════════════════════════
 // MAIN HANDLER
 // ════════════════════════════════════════════════════════════════
 module.exports = async (req, res) => {
@@ -463,12 +552,13 @@ module.exports = async (req, res) => {
     const now = new Date().toISOString();
     const previous = await kvGet("wt_signals");
 
-    const [tf15m, tf1h, tf4h, breakout, intraday] = await Promise.all([
+    const [tf15m, tf1h, tf4h, breakout, intraday, market] = await Promise.all([
       scanWT("15m", "5d",  1),
       scanWT("1h",  "14d", 2),
       scanWT("4h",  "60d", 7),
       scanBreakout(previous?.breakout?.signals || [], now),
       scanIntraday(previous?.intraday?.signals || [], now),
+      scanMarket(),
     ]);
 
     const result = {
@@ -479,6 +569,7 @@ module.exports = async (req, res) => {
       },
       breakout: { signals: breakout.signals, errorCount: breakout.errorCount },
       intraday: { signals: intraday.signals, errorCount: intraday.errorCount },
+      market,
       updatedAt:   now,
       symbolCount: SYMBOLS.length,
     };
@@ -497,6 +588,8 @@ module.exports = async (req, res) => {
       intraday: intraday.signals.length,
       intraday_breakout: intraday.signals.filter(s => s.mode === "breakout").length,
       intraday_reversal: intraday.signals.filter(s => s.mode === "reversal").length,
+      market_score: market.score,
+      market_mood: market.mood,
       updated:  now,
     });
   } catch(e) {
