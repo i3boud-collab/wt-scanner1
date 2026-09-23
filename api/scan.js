@@ -117,6 +117,33 @@ function marketSession(d = new Date()) {
   return 'closed';
 }
 
+function nyMinutes(d) {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+  }).formatToParts(new Date(d));
+  const value = type => Number(parts.find(part => part.type === type)?.value);
+  return value('hour') * 60 + value('minute');
+}
+
+function previousRegularClose(quotes, reference = new Date()) {
+  const today = nyDateKey(reference);
+  for (let i = quotes.length - 1; i >= 0; i--) {
+    const quote = quotes[i];
+    if (nyDateKey(quote.date) >= today) continue;
+    const mins = nyMinutes(quote.date);
+    if (mins >= 570 && mins < 960) return quote.close;
+  }
+  return null;
+}
+
+function previousDailyClose(quotes, reference = new Date()) {
+  const today = nyDateKey(reference);
+  for (let i = quotes.length - 1; i >= 0; i--) {
+    if (nyDateKey(quotes[i].date) < today) return quotes[i].close;
+  }
+  return null;
+}
+
 // ════════════════════════════════════════════════════════════════
 // STRATEGY 1: WaveTrend (15m, 1h, 4h)
 // ════════════════════════════════════════════════════════════════
@@ -358,7 +385,7 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
       const volumes = quotes5.map(q => q.volume);
       const dates = quotes5.map(q => q.date);
       const latestQuote = quotes5[quotes5.length - 1];
-      const previousClose = Number(quotes5.meta?.previousClose);
+      const previousClose = previousRegularClose(quotes5) ?? Number(quotes5.meta?.previousClose);
       const recentAvgVolume = volumes.slice(-21, -1).reduce((sum, value) => sum + value, 0) / Math.max(1, volumes.slice(-21, -1).length);
       const changePct = previousClose > 0 ? ((latestQuote.close - previousClose) / previousClose) * 100 : 0;
       breadthItems.push({
@@ -493,8 +520,8 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
       advancers, decliners, unchanged,
       total: breadthItems.length,
       averageChangePct: breadthItems.length ? +(breadthItems.reduce((sum, item) => sum + item.changePct, 0) / breadthItems.length).toFixed(2) : 0,
-      leaders: ranked.slice(0, 5),
-      laggards: ranked.slice(-5).reverse(),
+      leaders: ranked.filter(item => item.changePct > 0.05).slice(0, 5),
+      laggards: ranked.filter(item => item.changePct < -0.05).slice(-5).reverse(),
     },
   };
 }
@@ -526,11 +553,14 @@ async function scanMarket() {
 
   await Promise.all(instruments.map(async instrument => {
     try {
-      const quotes = await fetchYahoo(instrument.symbol, '5m', '5d', true);
+      const [quotes, dailyQuotes] = await Promise.all([
+        fetchYahoo(instrument.symbol, '5m', '5d', true),
+        fetchYahoo(instrument.symbol, '1d', '1mo', false),
+      ]);
       if (quotes.length < 20) throw new Error('Insufficient data');
       const closes = quotes.map(quote => quote.close);
       const last = quotes[quotes.length - 1];
-      const previousClose = Number(quotes.meta?.previousClose);
+      const previousClose = previousDailyClose(dailyQuotes) ?? Number(quotes.meta?.previousClose);
       const ema20 = calcEMA(closes, 20).at(-1);
       const changePct = previousClose > 0
         ? ((last.close - previousClose) / previousClose) * 100
