@@ -497,13 +497,22 @@ async function scanMarket() {
       const changePct = previousClose > 0
         ? ((last.close - previousClose) / previousClose) * 100
         : 0;
+      const momentumBase = closes[Math.max(0, closes.length - 7)];
+      const momentum30mPct = momentumBase > 0
+        ? ((last.close - momentumBase) / momentumBase) * 100
+        : 0;
+      const emaDistancePct = ema20 > 0
+        ? ((last.close - ema20) / ema20) * 100
+        : 0;
       items.push({
         symbol: instrument.symbol,
         name: instrument.name,
         price: +last.close.toFixed(2),
         previousClose: previousClose > 0 ? +previousClose.toFixed(2) : null,
         changePct: +changePct.toFixed(2),
+        momentum30mPct: +momentum30mPct.toFixed(2),
         ema20: +ema20.toFixed(2),
+        emaDistancePct: +emaDistancePct.toFixed(2),
         aboveEma20: last.close >= ema20,
         direction: changePct > 0.05 ? 'up' : changePct < -0.05 ? 'down' : 'flat',
         timestamp: last.date.getTime(),
