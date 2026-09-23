@@ -180,6 +180,10 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .market-card{border:1px solid #1c2d47;border-radius:7px;background:#0d192b;overflow:hidden;animation:rise .28s ease both}.market-card.up{box-shadow:inset 3px 0 0 var(--buy)}.market-card.down{box-shadow:inset 3px 0 0 var(--sell)}.market-card.flat{box-shadow:inset 3px 0 0 var(--gold)}
 .market-card-head{display:flex;justify-content:space-between;align-items:center;padding:16px}.market-symbol{font:800 19px/1 var(--mono);direction:ltr}.market-name{font-size:11px;color:var(--muted);margin-top:6px}.market-price{text-align:left;font:700 19px/1 var(--mono);direction:ltr}.market-change{font:700 13px/1 var(--mono);margin-top:7px}.market-change.up{color:var(--buy)}.market-change.down{color:var(--sell)}.market-change.flat{color:var(--gold)}
 .market-meta{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);background:#0a1525}.market-meta>div{padding:11px 5px;text-align:center;border-inline-start:1px solid var(--line)}.market-meta>div:first-child{border-inline-start:0}.market-reading{padding:10px 14px;border-top:1px solid var(--line);font-size:10px;color:#8194b0;line-height:1.5}.market-reading strong{color:#cfe0f5}
+.market-subtabs{display:flex;gap:6px;overflow-x:auto;padding:0 12px 11px;scrollbar-width:none}.market-subtabs::-webkit-scrollbar{display:none}.market-subtab{flex-shrink:0;height:31px;padding:0 12px;border:1px solid #213550;border-radius:5px;background:#101e32;color:#8c9bb1;cursor:pointer;font-size:12px}.market-subtab.active{background:#1b6fdc;border-color:#1b6fdc;color:#fff}
+.breadth-panel{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.breadth-box{padding:14px;border:1px solid #1f3451;border-radius:7px;background:#0d192b}.breadth-num{font:800 20px/1 var(--mono)}.breadth-lbl{font-size:10px;color:var(--muted);margin-top:7px}.breadth-box.up .breadth-num{color:var(--buy)}.breadth-box.down .breadth-num{color:var(--sell)}
+.gappers{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}.gapper-list{border:1px solid #1f3451;border-radius:7px;background:#0d192b;padding:13px}.gapper-title{font-size:12px;font-weight:700;margin-bottom:9px}.gapper-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid #172a43;font:600 11px/1 var(--mono)}.gapper-row:first-of-type{border-top:0}.gapper-up{color:var(--buy)}.gapper-down{color:var(--sell)}
+.calendar-wrap{grid-column:1/-1;display:grid;grid-template-columns:1.1fr .9fr;gap:8px}.calendar-panel{border:1px solid #1f3451;border-radius:7px;background:#0d192b;overflow:hidden}.calendar-head{padding:14px;border-bottom:1px solid #1d304b;display:flex;justify-content:space-between;align-items:center}.calendar-head h3{font-size:14px}.source-tag{font:700 9px/1 var(--mono);color:var(--blue)}.event-row{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #172a43}.event-row:last-child{border-bottom:0}.event-time{font:700 12px/1 var(--mono);direction:ltr;color:#dce8f8}.event-title{font-size:12px;font-weight:600}.event-meta{font-size:9px;color:var(--muted);margin-top:5px}.impact{font:700 9px/1 var(--mono);padding:5px 7px;border-radius:4px}.impact.high{color:#fff;background:#b53b50}.impact.medium{color:#19130a;background:var(--gold)}.earn-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid #172a43}.earn-row:last-child{border-bottom:0}.earn-symbol{font:800 13px/1 var(--mono)}.earn-name{font-size:9px;color:var(--muted);margin-top:4px}.earn-time{font-size:10px;color:#87a0c0;text-align:left}.watch-tag{color:var(--gold);font-size:9px}.empty-mini{padding:24px 14px;text-align:center;color:var(--muted);font-size:11px}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
 @media(min-width:621px){.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-alert,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
 @media(max-width:900px){.command-bar{grid-template-columns:1fr auto}.bot{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -189,6 +193,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
   .cards{grid-template-columns:1fr}.card,.bo-card{border-radius:6px}
   .market-summary{grid-template-columns:1fr 1fr}.market-summary .summary-main{grid-column:1/-1}
   .market-insights{grid-template-columns:1fr 1fr}.guide-grid{grid-template-columns:1fr}
+  .breadth-panel{grid-template-columns:1fr 1fr}.gappers,.calendar-wrap{grid-template-columns:1fr}.event-row{grid-template-columns:64px 1fr auto;padding-inline:10px}
 }
 </style>
 </head>
@@ -335,8 +340,11 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
     <div class="sc g"><div class="sn" id="mkt-up">0/4</div><div class="sl">مؤشرات صاعدة</div></div>
     <div class="sc r"><div class="sn" id="mkt-vix">—</div><div class="sl">تغير VIX</div></div>
   </div>
-  <div class="filters">
-    <span class="f on" style="pointer-events:none">SPY · QQQ · DIA · IWM · VIX</span>
+  <div class="market-subtabs" id="marketSubtabs">
+    <button class="market-subtab active" onclick="setMktView(this,'overview')">نظرة عامة</button>
+    <button class="market-subtab" onclick="setMktView(this,'pre')">قبل الافتتاح</button>
+    <button class="market-subtab" onclick="setMktView(this,'sectors')">القطاعات</button>
+    <button class="market-subtab" onclick="setMktView(this,'calendar')">تقويم اليوم</button>
     <span class="f" id="mkt-session" style="pointer-events:none">SESSION —</span>
   </div>
 </div>
@@ -367,6 +375,7 @@ let curTF   = '1h';
 let wtFilt  = 'all';
 let boFilt  = 'all';
 let idFilt  = 'all';
+let mktView = 'overview';
 let srch    = '';
 const REFRESH = 5 * 60 * 1000;
 let scanInProgress = false;
@@ -384,7 +393,9 @@ function setStrat(s) {
   document.getElementById('wrap-bo').classList.toggle('active', s==='bo');
   document.getElementById('wrap-id').classList.toggle('active', s==='id');
   document.getElementById('wrap-mkt').classList.toggle('active', s==='mkt');
-  document.getElementById('resultsTitle').textContent = s==='mkt' ? 'وضع السوق العام' : 'الإشارات المكتشفة';
+  document.getElementById('resultsTitle').textContent = s==='mkt'
+    ? ({overview:'وضع السوق العام',pre:'قراءة قبل الافتتاح',sectors:'قيادة القطاعات',calendar:'تقويم اليوم'}[mktView] || 'وضع السوق العام')
+    : 'الإشارات المكتشفة';
   renderCards();
 }
 
@@ -551,6 +562,14 @@ function setIDF(btn, f) {
   btn.classList.add('on');
   if(f==='buy')  btn.classList.add('on-buy');
   if(f==='sell') btn.classList.add('on-sell');
+  renderCards();
+}
+
+function setMktView(btn, view) {
+  mktView = view;
+  document.querySelectorAll('#marketSubtabs .market-subtab').forEach(el=>el.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('resultsTitle').textContent = {overview:'وضع السوق العام',pre:'قراءة قبل الافتتاح',sectors:'قيادة القطاعات',calendar:'تقويم اليوم'}[view];
   renderCards();
 }
 
@@ -773,7 +792,11 @@ function renderIntraday() {
 
 // ── Overall market cards ───────────────────────────────────────
 function renderMarket() {
-  let items = [...(data.market.items || [])];
+  const allItems = [...(data.market.items || [])];
+  if(mktView==='pre') { renderPreMarket(allItems); return; }
+  if(mktView==='sectors') { renderSectors(allItems); return; }
+  if(mktView==='calendar') { renderCalendar(); return; }
+  let items = allItems.filter(item=>!item.group || item.group==='core');
   if(srch){ const q=srch.toUpperCase(); items=items.filter(item=>item.symbol.includes(q)||item.name.toUpperCase().includes(q)); }
   const wrap = document.getElementById('cards');
   if(!items.length) { wrap.innerHTML=emptyHTML((data.market.items||[]).length); return; }
@@ -819,6 +842,7 @@ function renderMarket() {
     const direction = item.direction || 'flat';
     const arrow = direction==='up'?'▲':direction==='down'?'▼':'●';
     const change = `${item.changePct>0?'+':''}${Number(item.changePct).toFixed(2)}%`;
+    const unit = item.unit ?? '$';
     const emaDistance = item.emaDistancePct ?? ((item.price-item.ema20)/item.ema20*100);
     const momentum = item.momentum30mPct ?? 0;
     const reading = item.symbol==='^VIX'
@@ -830,16 +854,111 @@ function renderMarket() {
     <div class="market-card ${direction}" style="animation-delay:${Math.min(i*30,180)}ms">
       <div class="market-card-head">
         <div><div class="market-symbol">${item.symbol}</div><div class="market-name">${item.name}</div></div>
-        <div><div class="market-price">$${Number(item.price).toFixed(2)}</div><div class="market-change ${direction}">${arrow} ${change}</div></div>
+        <div><div class="market-price">${unit}${Number(item.price).toFixed(2)}</div><div class="market-change ${direction}">${arrow} ${change}</div></div>
       </div>
       <div class="market-meta">
-        <div><div class="bo-ema-v">$${item.previousClose==null?'—':Number(item.previousClose).toFixed(2)}</div><div class="bo-ema-l">إغلاق أمس</div></div>
-        <div><div class="bo-ema-v" style="color:${item.aboveEma20?'var(--buy)':'var(--sell)'}">${emaDistance>0?'+':''}${Number(emaDistance).toFixed(2)}%</div><div class="bo-ema-l">عن EMA20 ($${Number(item.ema20).toFixed(2)})</div></div>
+        <div><div class="bo-ema-v">${unit}${item.previousClose==null?'—':Number(item.previousClose).toFixed(2)}</div><div class="bo-ema-l">إغلاق أمس</div></div>
+        <div><div class="bo-ema-v" style="color:${item.aboveEma20?'var(--buy)':'var(--sell)'}">${emaDistance>0?'+':''}${Number(emaDistance).toFixed(2)}%</div><div class="bo-ema-l">عن EMA20 (${unit}${Number(item.ema20).toFixed(2)})</div></div>
         <div><div class="bo-ema-v" style="color:${momentum>=0?'var(--buy)':'var(--sell)'}">${momentum>0?'+':''}${Number(momentum).toFixed(2)}%</div><div class="bo-ema-l">زخم 30 دقيقة</div></div>
       </div>
       <div class="market-reading"><strong>${(item.session||'closed').toUpperCase()} · ${item.date}</strong><br>${reading}</div>
     </div>`;
   }).join('');
+}
+
+function esc(value) {
+  return String(value ?? '').replace(/[&<>'"]/g, char=>({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[char]));
+}
+
+function compactMarketCard(item, i=0) {
+  const direction = item.direction || 'flat';
+  const arrow = direction==='up'?'▲':direction==='down'?'▼':'●';
+  const change = `${item.changePct>0?'+':''}${Number(item.changePct||0).toFixed(2)}%`;
+  const momentum = Number(item.momentum30mPct||0);
+  const unit = item.unit ?? '$';
+  return `
+  <div class="market-card ${direction}" style="animation-delay:${Math.min(i*30,180)}ms">
+    <div class="market-card-head">
+      <div><div class="market-symbol">${esc(item.symbol)}</div><div class="market-name">${esc(item.name)}</div></div>
+      <div><div class="market-price">${unit}${Number(item.price).toFixed(2)}</div><div class="market-change ${direction}">${arrow} ${change}</div></div>
+    </div>
+    <div class="market-meta">
+      <div><div class="bo-ema-v">${unit}${item.previousClose==null?'—':Number(item.previousClose).toFixed(2)}</div><div class="bo-ema-l">الإغلاق السابق</div></div>
+      <div><div class="bo-ema-v" style="color:${item.aboveEma20?'var(--buy)':'var(--sell)'}">${Number(item.emaDistancePct)>0?'+':''}${Number(item.emaDistancePct||0).toFixed(2)}%</div><div class="bo-ema-l">عن EMA20</div></div>
+      <div><div class="bo-ema-v" style="color:${momentum>=0?'var(--buy)':'var(--sell)'}">${momentum>0?'+':''}${momentum.toFixed(2)}%</div><div class="bo-ema-l">زخم 30 دقيقة</div></div>
+    </div>
+  </div>`;
+}
+
+function renderPreMarket(allItems) {
+  let items = allItems.filter(item=>item.group==='futures'||item.group==='macro');
+  if(srch){ const q=srch.toUpperCase(); items=items.filter(item=>item.symbol.includes(q)||item.name.toUpperCase().includes(q)); }
+  const breadth = data.market.watchlistBreadth || {advancers:0,decliners:0,unchanged:0,total:0,averageChangePct:0,leaders:[],laggards:[]};
+  const bias = breadth.advancers>breadth.decliners ? 'إيجابي' : breadth.decliners>breadth.advancers ? 'سلبي' : 'متوازن';
+  const gapRows = (rows, cls)=>rows.map(item=>`<div class="gapper-row"><span>${esc(item.symbol)}</span><span class="${cls}">${item.changePct>0?'+':''}${Number(item.changePct).toFixed(2)}%</span></div>`).join('') || '<div class="empty-mini">لا توجد بيانات</div>';
+  const wrap = document.getElementById('cards');
+  wrap.innerHTML = `
+    <div class="breadth-panel">
+      <div class="breadth-box up"><div class="breadth-num">${breadth.advancers}/${breadth.total}</div><div class="breadth-lbl">أسهم القائمة صاعدة</div></div>
+      <div class="breadth-box down"><div class="breadth-num">${breadth.decliners}/${breadth.total}</div><div class="breadth-lbl">أسهم القائمة هابطة</div></div>
+      <div class="breadth-box"><div class="breadth-num">${Number(breadth.averageChangePct||0)>0?'+':''}${Number(breadth.averageChangePct||0).toFixed(2)}%</div><div class="breadth-lbl">متوسط حركة القائمة</div></div>
+      <div class="breadth-box"><div class="breadth-num">${bias}</div><div class="breadth-lbl">ميل الـPre-Market</div></div>
+    </div>
+    <div class="gappers">
+      <div class="gapper-list"><div class="gapper-title">أقوى فجوات صاعدة</div>${gapRows(breadth.leaders||[],'gapper-up')}</div>
+      <div class="gapper-list"><div class="gapper-title">أقوى فجوات هابطة</div>${gapRows(breadth.laggards||[],'gapper-down')}</div>
+    </div>
+    <details class="market-guide">
+      <summary>كيف أقرأ ما قبل الافتتاح؟</summary>
+      <div class="guide-grid">
+        <div class="guide-item"><div class="guide-title">ES / NQ / YM / RTY</div><div class="guide-text">عقود S&P وناسداك والداو وRussell. اتفاقها يعطي اتجاهًا عامًا أقوى؛ اختلافها يعني سوقًا انتقائيًا.</div></div>
+        <div class="guide-item"><div class="guide-title">US 10Y وDXY</div><div class="guide-text">ارتفاع العائد والدولار معًا قد يضغط خصوصًا على أسهم النمو والتقنية. راقب الاتجاه لا الرقم منفردًا.</div></div>
+        <div class="guide-item"><div class="guide-title">الفجوة والفوليوم</div><div class="guide-text">الفجوة تحدد حركة السهم من إغلاق أمس. لا تعتمد عليها دون سيولة وتأكيد بعد الافتتاح.</div></div>
+      </div>
+    </details>
+    ${items.length?items.map(compactMarketCard).join(''):emptyHTML(0)}`;
+}
+
+function renderSectors(allItems) {
+  let items = allItems.filter(item=>item.group==='sector').sort((a,b)=>b.changePct-a.changePct);
+  if(srch){ const q=srch.toUpperCase(); items=items.filter(item=>item.symbol.includes(q)||item.name.toUpperCase().includes(q)); }
+  const leader = items[0], laggard = items[items.length-1];
+  const wrap = document.getElementById('cards');
+  if(!items.length){ wrap.innerHTML=emptyHTML(0); return; }
+  wrap.innerHTML = `
+    <div class="market-insights">
+      <div class="insight-card"><div class="insight-title">القطاع القائد</div><div class="insight-value">${esc(leader.symbol)} ${leader.changePct>0?'+':''}${leader.changePct}%</div><div class="insight-note">الأقوى مقارنة بإغلاق أمس</div></div>
+      <div class="insight-card"><div class="insight-title">القطاع الأضعف</div><div class="insight-value">${esc(laggard.symbol)} ${laggard.changePct>0?'+':''}${laggard.changePct}%</div><div class="insight-note">قد يحدّد الأسهم التي نتجنبها</div></div>
+      <div class="insight-card"><div class="insight-title">قطاعات صاعدة</div><div class="insight-value">${items.filter(item=>item.direction==='up').length}/${items.length}</div><div class="insight-note">اتساع الحركة بين القطاعات</div></div>
+      <div class="insight-card"><div class="insight-title">طريقة الاستخدام</div><div class="insight-value">اتبع القوة</div><div class="insight-note">فضّل إشارة السهم المتوافقة مع اتجاه قطاعه</div></div>
+    </div>${items.map(compactMarketCard).join('')}`;
+}
+
+function remainingText(timestamp) {
+  const mins = Math.round((timestamp-Date.now())/60000);
+  if(mins < -15) return 'صدر';
+  if(mins <= 0) return 'الآن';
+  if(mins < 60) return `بعد ${mins} د`;
+  return `بعد ${Math.floor(mins/60)}س ${mins%60}د`;
+}
+
+function renderCalendar() {
+  const calendar = data.market.calendar || {events:[],earnings:[],date:''};
+  const events = calendar.events || [], earnings = calendar.earnings || [];
+  const eventRows = events.map(event=>{
+    const date = new Date(event.timestamp);
+    const time = date.toLocaleTimeString('ar-SA',{timeZone:'Asia/Riyadh',hour:'2-digit',minute:'2-digit'});
+    const remaining = remainingText(event.timestamp);
+    const values = [event.previous!=null?`السابق ${esc(event.previous)}`:'',event.forecast!=null?`المتوقع ${esc(event.forecast)}`:'',event.actual!=null?`الفعلي ${esc(event.actual)}`:''].filter(Boolean).join(' · ');
+    return `<div class="event-row"><div><div class="event-time">${time}</div><div class="event-meta">${remaining}</div></div><div><div class="event-title">${esc(event.title)}</div><div class="event-meta">${values||'بتوقيت الرياض'}</div></div><span class="impact ${event.impact}">${event.impact==='high'?'مهم':'متوسط'}</span></div>`;
+  }).join('') || '<div class="empty-mini">لا توجد أحداث اقتصادية مهمة متاحة اليوم</div>';
+  const earningRows = earnings.map(row=>`<div class="earn-row"><div><div class="earn-symbol">${esc(row.symbol)} ${row.watched?'<span class="watch-tag">★ قائمتك</span>':''}</div><div class="earn-name">${esc(row.name)}</div></div><div class="earn-time">${esc(row.time)}${row.epsForecast?`<br>EPS ${esc(row.epsForecast)}`:''}</div></div>`).join('') || '<div class="empty-mini">لا توجد نتائج شركات متاحة اليوم</div>';
+  document.getElementById('cards').innerHTML = `
+    <div class="calendar-wrap">
+      <div class="calendar-panel"><div class="calendar-head"><h3>الأحداث الاقتصادية</h3><span class="source-tag">${calendar.eventSource==='live'?'LIVE':'BACKUP'}</span></div>${eventRows}</div>
+      <div class="calendar-panel"><div class="calendar-head"><h3>نتائج الشركات</h3><span class="source-tag">${calendar.earningsSource==='live'?'LIVE':'—'}</span></div>${earningRows}</div>
+    </div>
+    <details class="market-guide" open><summary>قاعدة التداول وقت الأخبار</summary><div class="guide-grid"><div class="guide-item"><div class="guide-title">قبل الخبر</div><div class="guide-text">تجنّب دخولًا جديدًا قبل الحدث المهم بـ15–30 دقيقة؛ السبريد والتذبذب قد يرتفعان فجأة.</div></div><div class="guide-item"><div class="guide-title">بعد الخبر</div><div class="guide-text">انتظر إغلاق أول شمعة 5 دقائق وتأكد من اتجاه SPY وQQQ قبل الاعتماد على CALL أو PUT.</div></div><div class="guide-item"><div class="guide-title">النتائج</div><div class="guide-text">لا تتعامل مع إشارة فنية للسهم كالمعتاد إذا كانت نتائجه اليوم؛ التقلب الضمني قد يتغير بقوة.</div></div></div></details>`;
 }
 
 function emptyHTML(total) {
