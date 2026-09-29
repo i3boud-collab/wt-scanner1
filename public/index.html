@@ -756,11 +756,13 @@ function renderIntraday() {
 
   const wrap = document.getElementById('cards');
   const context = optionsContext();
-  const contextBanner = `<div class="v2-panel"><div class="v2-heading">V2 · سياق اللحظي للأوبشن</div><div class="v2-note">${context.summary} ${context.eventNote}</div><div class="v2-badge">السياق لا يغيّر الإشارة ولا يمثل سعر عقد الأوبشن أو احتمال نجاحها</div></div>`;
+  const contextBanner = `<div class="v2-panel"><div class="v2-heading">سياق اللحظي للأوبشن</div><div class="v2-note">${context.summary} ${context.eventNote}</div><div class="v2-badge">السياق لا يغيّر الإشارة ولا يمثل سعر عقد الأوبشن أو احتمال نجاحها</div></div>`;
   if(!sigs.length) { wrap.innerHTML=contextBanner+emptyHTML(data.intraday.signals.length); return; }
   wrap.innerHTML = contextBanner + sigs.map((s,i)=>{
     const buy = s.type==='buy';
-    const aligned = context.bias==='neutral' ? 'السوق مختلط' : (buy&&context.bias==='call')||(!buy&&context.bias==='put') ? 'متوافق مع السوق' : 'عكس ميل السوق';
+    const aligned = !context.available ? 'سياق السوق غير متاح' : context.bias==='neutral' ? 'السوق مختلط' : (buy&&context.bias==='call')||(!buy&&context.bias==='put') ? 'متوافق مع السوق' : 'عكس ميل السوق';
+    const ageMinutes = Math.max(0,Math.floor((Date.now()-(Number(s.timestamp)+5*60*1000))/60000));
+    const ageText = ageMinutes<5 ? 'إشارة جديدة' : `منذ ${ageMinutes} دقيقة`;
     const conf = s.confidence||0;
     const modeText = s.mode==='breakout' ? 'اختراق لحظي' : 'انعكاس اتجاه';
     const modeColor = s.mode==='breakout' ? 'var(--blue)' : 'var(--purple)';
@@ -774,7 +776,7 @@ function renderIntraday() {
           <div>
             <div class="bo-sym">${s.symbol}</div>
             <div class="bo-type">${buy?'▲ CALL':'▼ PUT'} — ${modeText}</div>
-            <div class="bo-type" style="margin-top:2px">⏱ ${s.date} · إغلاق 5M · ${(s.session||'open').toUpperCase()}</div>
+            <div class="bo-type" style="margin-top:2px">⏱ ${s.date} · إغلاق 5M · ${(s.session||'open').toUpperCase()} · ${ageText}</div>
           </div>
         </div>
         <div class="bo-right">
@@ -812,6 +814,7 @@ function renderIntraday() {
         <span class="p p-gy" style="color:${rsiC}">RSI ${s.rsi}</span>
         <span class="p p-gy">ATR5 $${s.atr}</span>
         <span class="p p-gy">${aligned}</span>
+        <span class="p ${ageMinutes>=20?'p-go':'p-gb'}">${ageMinutes>=20?'راجع السعر الآن · ':''}${ageText}</span>
       </div>
     </div>`;
   }).join('');
@@ -870,7 +873,7 @@ function renderMarket() {
   const vixZone = !vixItem ? 'غير متاح' : vixItem.price<15 ? 'تقلب منخفض' : vixItem.price<20 ? 'تقلب معتدل' : vixItem.price<30 ? 'تقلب مرتفع' : 'تقلب شديد';
   const context=optionsContext();
   const summary = `
-    <div class="v2-panel"><div class="v2-heading">V2 · عدسة الأوبشن قبل الدخول</div>
+    <div class="v2-panel"><div class="v2-heading">عدسة الأوبشن قبل الدخول</div>
       <div class="v2-grid">
         <div class="v2-metric"><strong>${context.bias==='call'?'ميل CALL':context.bias==='put'?'ميل PUT':'انتظار / مختلط'}</strong><span>توافق SPY وQQQ مع اتساع قائمتك والعقود المستقبلية إن توفرت</span></div>
         <div class="v2-metric"><strong>${context.available?`${context.breadth.advancers}↑ / ${context.breadth.decliners}↓`:'—'}</strong><span>اتساع الأسهم الحالية؛ ليس السوق الأمريكي كله</span></div>
