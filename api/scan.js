@@ -643,18 +643,9 @@ async function fetchJsonWithTimeout(url, options = {}, timeoutMs = 5500) {
   }
 }
 
-function calendarFallback(date) {
-  if (date !== '2026-09-23') return [];
-  return [
-    { title: 'S&P Global Flash Manufacturing PMI', timestamp: Date.parse('2026-09-23T13:45:00Z'), impact: 'high', actual: null, forecast: '53.6', previous: null, kind: 'economic' },
-    { title: 'S&P Global Flash Services PMI', timestamp: Date.parse('2026-09-23T13:45:00Z'), impact: 'high', actual: null, forecast: '56.0', previous: null, kind: 'economic' },
-    { title: 'Fed Governor Michael Barr speaks', timestamp: Date.parse('2026-09-23T14:05:00Z'), impact: 'medium', actual: null, forecast: null, previous: null, kind: 'fed' },
-  ];
-}
-
 async function scanCalendar() {
   const date = nyDateKey();
-  let events = [], earnings = [], eventSource = 'fallback', earningsSource = 'unavailable';
+  let events = [], earnings = [], eventSource = 'unavailable', earningsSource = 'unavailable';
 
   try {
     const from = `${date}T00:00:00.000Z`;
@@ -677,13 +668,12 @@ async function scanCalendar() {
         previous: event.previous ?? null,
         kind: /fed|fomc|powell|governor/i.test(event.title || event.name || '') ? 'fed' : 'economic',
       };
-    }).filter(event => Number.isFinite(event.timestamp) && event.impact !== 'low');
-    eventSource = 'live';
+    }).filter(event => Number.isFinite(event.timestamp) && nyDateKey(new Date(event.timestamp)) === date && event.impact !== 'low');
+    eventSource = 'third-party';
   } catch (error) {
-    events = calendarFallback(date);
+    events = [];
   }
 
-  if (!events.length) events = calendarFallback(date);
   events.sort((a, b) => a.timestamp - b.timestamp);
 
   try {
@@ -692,15 +682,15 @@ async function scanCalendar() {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json, text/plain, */*', 'Origin': 'https://www.nasdaq.com' },
     });
     const rows = json?.data?.rows || json?.data?.calendar?.rows || [];
-    earnings = rows.slice(0, 20).map(row => ({
+    earnings = rows.map(row => ({
       symbol: row.symbol || '—',
       name: row.name || row.companyName || '',
       time: row.time || row.timeOfDay || 'غير محدد',
       epsForecast: row.epsForecast || row.consensusEPSForecast || null,
       fiscalQuarter: row.fiscalQuarterEnding || null,
       watched: SYMBOLS.includes(row.symbol),
-    })).sort((a, b) => Number(b.watched) - Number(a.watched));
-    earningsSource = 'live';
+    })).sort((a, b) => Number(b.watched) - Number(a.watched)).slice(0, 20);
+    earningsSource = 'third-party';
   } catch (error) {
     earnings = [];
   }
