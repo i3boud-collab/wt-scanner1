@@ -184,6 +184,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .breadth-panel{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.breadth-box{padding:14px;border:1px solid #1f3451;border-radius:7px;background:#0d192b}.breadth-num{font:800 20px/1 var(--mono)}.breadth-lbl{font-size:10px;color:var(--muted);margin-top:7px}.breadth-box.up .breadth-num{color:var(--buy)}.breadth-box.down .breadth-num{color:var(--sell)}
 .gappers{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}.gapper-list{border:1px solid #1f3451;border-radius:7px;background:#0d192b;padding:13px}.gapper-title{font-size:12px;font-weight:700;margin-bottom:9px}.gapper-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid #172a43;font:600 11px/1 var(--mono)}.gapper-row:first-of-type{border-top:0}.gapper-up{color:var(--buy)}.gapper-down{color:var(--sell)}
 .calendar-wrap{grid-column:1/-1;display:grid;grid-template-columns:1.1fr .9fr;gap:8px}.calendar-panel{border:1px solid #1f3451;border-radius:7px;background:#0d192b;overflow:hidden}.calendar-head{padding:14px;border-bottom:1px solid #1d304b;display:flex;justify-content:space-between;align-items:center}.calendar-head h3{font-size:14px}.source-tag{font:700 9px/1 var(--mono);color:var(--blue)}.event-row{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #172a43}.event-row:last-child{border-bottom:0}.event-time{font:700 12px/1 var(--mono);direction:ltr;color:#dce8f8}.event-title{font-size:12px;font-weight:600}.event-meta{font-size:9px;color:var(--muted);margin-top:5px}.impact{font:700 9px/1 var(--mono);padding:5px 7px;border-radius:4px}.impact.high{color:#fff;background:#b53b50}.impact.medium{color:#19130a;background:var(--gold)}.earn-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid #172a43}.earn-row:last-child{border-bottom:0}.earn-symbol{font:800 13px/1 var(--mono)}.earn-name{font-size:9px;color:var(--muted);margin-top:4px}.earn-time{font-size:10px;color:#87a0c0;text-align:left}.watch-tag{color:var(--gold);font-size:9px}.empty-mini{padding:24px 14px;text-align:center;color:var(--muted);font-size:11px}
+.v2-panel{grid-column:1/-1;border:1px solid #2a4568;border-radius:7px;background:linear-gradient(135deg,#10243c,#0d192b);padding:15px}.v2-heading{font-size:14px;font-weight:700;margin-bottom:10px}.v2-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.v2-metric{border:1px solid #2a405d;border-radius:6px;padding:11px;background:#0b1a2d}.v2-metric strong{display:block;font:700 14px/1.2 var(--mono);color:#e5f0ff}.v2-metric span{display:block;font-size:10px;color:#8ca3bd;margin-top:6px;line-height:1.5}.v2-note{font-size:11px;line-height:1.7;color:#9ab0ca;margin-top:12px}.v2-warning{color:var(--gold)}.v2-badge{display:inline-block;border:1px solid #33506f;border-radius:4px;padding:3px 7px;margin-top:7px;font-size:10px;color:#98b8d8}.calendar-widget{display:none;grid-column:1/-1;border:1px solid #243a56;border-radius:7px;overflow:hidden;background:#101b2b;padding:10px}.calendar-widget.active{display:block}.calendar-widget .tradingview-widget-container{height:560px;width:100%}.calendar-widget .tradingview-widget-container__widget{height:535px;width:100%}.calendar-widget a{color:#7eb3ff;font-size:10px}.calendar-disclosure{font-size:10px;color:#8093ab;line-height:1.5;margin-bottom:8px}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
 @media(min-width:621px){.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-alert,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
 @media(max-width:900px){.command-bar{grid-template-columns:1fr auto}.bot{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -194,6 +195,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
   .market-summary{grid-template-columns:1fr 1fr}.market-summary .summary-main{grid-column:1/-1}
   .market-insights{grid-template-columns:1fr 1fr}.guide-grid{grid-template-columns:1fr}
   .breadth-panel{grid-template-columns:1fr 1fr}.gappers,.calendar-wrap{grid-template-columns:1fr}.event-row{grid-template-columns:64px 1fr auto;padding-inline:10px}
+  .v2-grid{grid-template-columns:1fr}.calendar-widget .tradingview-widget-container{height:600px}.calendar-widget .tradingview-widget-container__widget{height:575px}
 }
 </style>
 </head>
@@ -356,6 +358,13 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
   <div class="results-note">AUTO REFRESH · 5 MIN</div>
 </div>
 <div class="cards" id="cards"></div>
+<div class="calendar-widget" id="calendarWidget" dir="ltr">
+  <div class="calendar-disclosure" dir="rtl">تقويم الولايات المتحدة من TradingView. اضبط المنطقة الزمنية داخل التقويم وتحقق من وقت الخبر قبل التداول؛ إذا منع المتصفح عرضه افتح المصدر مباشرة.</div>
+  <div class="tradingview-widget-container">
+    <div class="tradingview-widget-container__widget"></div>
+    <div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/economic-calendar/" target="_blank" rel="noopener noreferrer">فتح التقويم الاقتصادي من TradingView ↗</a></div>
+  </div>
+</div>
 </main>
 
 <div class="toast" id="toast"></div>
@@ -580,10 +589,25 @@ function fmtV(v) { if(!v) return '—'; if(v>=1e6) return (v/1e6).toFixed(1)+'M'
 // RENDER CARDS
 // ═══════════════════════════════════════════════════════════════
 function renderCards() {
+  const showCalendar=strat==='mkt'&&mktView==='calendar';
+  document.getElementById('calendarWidget').classList.toggle('active',showCalendar);
+  if(showCalendar) loadCalendarWidget();
   if (strat === 'wt') renderWT();
   else if (strat === 'bo') renderBO();
   else if (strat === 'id') renderIntraday();
   else renderMarket();
+}
+
+let calendarWidgetLoaded=false;
+function loadCalendarWidget() {
+  if(calendarWidgetLoaded) return;
+  calendarWidgetLoaded=true;
+  const script=document.createElement('script');
+  script.src='https://s3.tradingview.com/external-embedding/embed-widget-events.js';
+  script.async=true;
+  script.textContent=JSON.stringify({colorTheme:'dark',isTransparent:false,locale:'en',countryFilter:'us',importanceFilter:'-1,0,1',width:'100%',height:535});
+  script.onerror=()=>{document.querySelector('#calendarWidget .calendar-disclosure').textContent='تعذر تحميل التقويم داخل الصفحة. افتح الرابط أدناه للتحقق من أحداث اليوم.';};
+  document.querySelector('#calendarWidget .tradingview-widget-container').appendChild(script);
 }
 
 // ── WaveTrend cards ─────────────────────────────────────────────
@@ -731,10 +755,12 @@ function renderIntraday() {
   if(srch){ const q=srch.toUpperCase(); sigs=sigs.filter(s=>s.symbol.includes(q)); }
 
   const wrap = document.getElementById('cards');
-  if(!sigs.length) { wrap.innerHTML=emptyHTML(data.intraday.signals.length); return; }
-
-  wrap.innerHTML = sigs.map((s,i)=>{
+  const context = optionsContext();
+  const contextBanner = `<div class="v2-panel"><div class="v2-heading">V2 · سياق اللحظي للأوبشن</div><div class="v2-note">${context.summary} ${context.eventNote}</div><div class="v2-badge">السياق لا يغيّر الإشارة ولا يمثل سعر عقد الأوبشن أو احتمال نجاحها</div></div>`;
+  if(!sigs.length) { wrap.innerHTML=contextBanner+emptyHTML(data.intraday.signals.length); return; }
+  wrap.innerHTML = contextBanner + sigs.map((s,i)=>{
     const buy = s.type==='buy';
+    const aligned = context.bias==='neutral' ? 'السوق مختلط' : (buy&&context.bias==='call')||(!buy&&context.bias==='put') ? 'متوافق مع السوق' : 'عكس ميل السوق';
     const conf = s.confidence||0;
     const modeText = s.mode==='breakout' ? 'اختراق لحظي' : 'انعكاس اتجاه';
     const modeColor = s.mode==='breakout' ? 'var(--blue)' : 'var(--purple)';
@@ -785,12 +811,41 @@ function renderIntraday() {
         ${s.highVol?'<span class="p p-go">VOL ✓</span>':'<span class="p p-gy">VOL عادي</span>'}
         <span class="p p-gy" style="color:${rsiC}">RSI ${s.rsi}</span>
         <span class="p p-gy">ATR5 $${s.atr}</span>
+        <span class="p p-gy">${aligned}</span>
       </div>
     </div>`;
   }).join('');
 }
 
 // ── Overall market cards ───────────────────────────────────────
+function optionsContext() {
+  const market = data.market || {};
+  const items = market.items || [];
+  const lookup = symbol=>items.find(item=>item.symbol===symbol);
+  const spy=lookup('SPY'), qqq=lookup('QQQ'), vix=lookup('^VIX');
+  const futures=['ES=F','NQ=F'].map(lookup).filter(Boolean);
+  const breadth=market.watchlistBreadth;
+  const fresh = [spy,qqq].every(item=>item&&Date.now()-item.timestamp<20*60*1000);
+  const hasBreadth = breadth?.total>0;
+  const unavailable = market.session==='closed'||!fresh||!hasBreadth;
+  const positive=[spy,qqq].filter(item=>item?.direction==='up').length;
+  const negative=[spy,qqq].filter(item=>item?.direction==='down').length;
+  const futureUp=futures.filter(item=>item.direction==='up').length;
+  const futureDown=futures.filter(item=>item.direction==='down').length;
+  let bias='neutral';
+  if(!unavailable&&positive===2&&breadth.advancers>breadth.decliners&&(!futures.length||futureUp>=futureDown))bias='call';
+  if(!unavailable&&negative===2&&breadth.decliners>breadth.advancers&&(!futures.length||futureDown>=futureUp))bias='put';
+  const vixText=vix&&Date.now()-vix.timestamp<30*60*1000?`VIX ${vix.changePct>0?'+':''}${vix.changePct}%`:'VIX غير متاح';
+  const summary=unavailable?'بيانات السوق غير مكتملة أو قديمة؛ لا أعرض ميلًا تداوليًا الآن.'
+    :bias==='call'?'SPY وQQQ صاعدان واتساع قائمتك داعم؛ سياق CALL، وانتظر إشارة السهم نفسها.'
+    :bias==='put'?'SPY وQQQ هابطان واتساع قائمتك سلبي؛ سياق PUT، وانتظر إشارة السهم نفسها.'
+    :'السوق متباين؛ الأفضل انتظار توافق SPY وQQQ والقائمة بدل افتراض اتجاه واحد.';
+  const liveEvents=market.calendar?.eventSource==='third-party'?(market.calendar.events||[]):[];
+  const upcoming=liveEvents.filter(event=>event.impact==='high'&&event.timestamp>Date.now()&&event.timestamp-Date.now()<30*60*1000);
+  const eventNote=upcoming.length?'⚠️ خبر مهم خلال 30 دقيقة؛ راجع التقويم قبل الدخول.':'تحقق من التقويم قبل أي صفقة؛ قد لا تتوفر أحداثه برمجيًا.';
+  return {bias,summary,eventNote,vixText,available:!unavailable,breadth};
+}
+
 function renderMarket() {
   const allItems = [...(data.market.items || [])];
   if(mktView==='pre') { renderPreMarket(allItems); return; }
@@ -813,7 +868,16 @@ function renderMarket() {
   const riskMode = data.market.score>=65 && (vixItem?.changePct??0)<=0 ? 'شهية مخاطرة مرتفعة'
     : data.market.score<=35 || (vixItem?.changePct??0)>=5 ? 'حذر مرتفع' : 'شهية مخاطرة متوازنة';
   const vixZone = !vixItem ? 'غير متاح' : vixItem.price<15 ? 'تقلب منخفض' : vixItem.price<20 ? 'تقلب معتدل' : vixItem.price<30 ? 'تقلب مرتفع' : 'تقلب شديد';
+  const context=optionsContext();
   const summary = `
+    <div class="v2-panel"><div class="v2-heading">V2 · عدسة الأوبشن قبل الدخول</div>
+      <div class="v2-grid">
+        <div class="v2-metric"><strong>${context.bias==='call'?'ميل CALL':context.bias==='put'?'ميل PUT':'انتظار / مختلط'}</strong><span>توافق SPY وQQQ مع اتساع قائمتك والعقود المستقبلية إن توفرت</span></div>
+        <div class="v2-metric"><strong>${context.available?`${context.breadth.advancers}↑ / ${context.breadth.decliners}↓`:'—'}</strong><span>اتساع الأسهم الحالية؛ ليس السوق الأمريكي كله</span></div>
+        <div class="v2-metric"><strong>${context.vixText}</strong><span>التقلب المتوقع؛ ليس سعر عقدك أو IV الخاص به</span></div>
+      </div><div class="v2-note">${context.summary} <span class="v2-warning">${context.eventNote}</span></div>
+      <div class="v2-badge">لا توجد هنا أسعار عقود أو Greeks أو سيولة الخيارات؛ افحص السبريد وموعد الانتهاء في وسيطك</div>
+    </div>
     <div class="market-summary">
       <div class="summary-main"><span class="mood-dot ${data.market.mood}"></span><div><div class="summary-value">السوق ${moodText}</div><div class="summary-label">قراءة سياق عامة وليست إشارة دخول</div></div></div>
       <div><div class="summary-value">${data.market.score ?? 50}/100</div><div class="summary-label">درجة القوة</div><div class="summary-help">65+ صاعد · 35− هابط · بينهما محايد</div></div>
@@ -951,12 +1015,13 @@ function renderCalendar() {
     const remaining = remainingText(event.timestamp);
     const values = [event.previous!=null?`السابق ${esc(event.previous)}`:'',event.forecast!=null?`المتوقع ${esc(event.forecast)}`:'',event.actual!=null?`الفعلي ${esc(event.actual)}`:''].filter(Boolean).join(' · ');
     return `<div class="event-row"><div><div class="event-time">${time}</div><div class="event-meta">${remaining}</div></div><div><div class="event-title">${esc(event.title)}</div><div class="event-meta">${values||'بتوقيت الرياض'}</div></div><span class="impact ${event.impact}">${event.impact==='high'?'مهم':'متوسط'}</span></div>`;
-  }).join('') || '<div class="empty-mini">لا توجد أحداث اقتصادية مهمة متاحة اليوم</div>';
+  }).join('');
   const earningRows = earnings.map(row=>`<div class="earn-row"><div><div class="earn-symbol">${esc(row.symbol)} ${row.watched?'<span class="watch-tag">★ قائمتك</span>':''}</div><div class="earn-name">${esc(row.name)}</div></div><div class="earn-time">${esc(row.time)}${row.epsForecast?`<br>EPS ${esc(row.epsForecast)}`:''}</div></div>`).join('') || '<div class="empty-mini">لا توجد نتائج شركات متاحة اليوم</div>';
   document.getElementById('cards').innerHTML = `
+    <div class="v2-panel"><div class="v2-heading">الأحداث الاقتصادية الأمريكية · ${esc(calendar.date||'')}</div><div class="v2-note">التقويم المدمج من TradingView يظهر أسفل هذه البطاقات؛ يعرض الأحداث وتفاصيلها بحسب إعداد المنطقة الزمنية فيه. قائمة الأحداث البرمجية اختيارية ولا نعتمد على فراغها كدليل على عدم وجود أخبار.</div></div>
     <div class="calendar-wrap">
-      <div class="calendar-panel"><div class="calendar-head"><h3>الأحداث الاقتصادية</h3><span class="source-tag">${calendar.eventSource==='live'?'LIVE':'BACKUP'}</span></div>${eventRows}</div>
-      <div class="calendar-panel"><div class="calendar-head"><h3>نتائج الشركات</h3><span class="source-tag">${calendar.earningsSource==='live'?'LIVE':'—'}</span></div>${earningRows}</div>
+      ${eventRows?`<div class="calendar-panel"><div class="calendar-head"><h3>أحداث تم جلبها أيضًا</h3><span class="source-tag">مصدر إضافي</span></div>${eventRows}</div>`:''}
+      <div class="calendar-panel"><div class="calendar-head"><h3>نتائج الشركات</h3><span class="source-tag">${calendar.earningsSource==='third-party'?'مصدر خارجي':'المصدر غير متاح'}</span></div>${earningRows}</div>
     </div>
     <details class="market-guide" open><summary>قاعدة التداول وقت الأخبار</summary><div class="guide-grid"><div class="guide-item"><div class="guide-title">قبل الخبر</div><div class="guide-text">تجنّب دخولًا جديدًا قبل الحدث المهم بـ15–30 دقيقة؛ السبريد والتذبذب قد يرتفعان فجأة.</div></div><div class="guide-item"><div class="guide-title">بعد الخبر</div><div class="guide-text">انتظر إغلاق أول شمعة 5 دقائق وتأكد من اتجاه SPY وQQQ قبل الاعتماد على CALL أو PUT.</div></div><div class="guide-item"><div class="guide-title">النتائج</div><div class="guide-text">لا تتعامل مع إشارة فنية للسهم كالمعتاد إذا كانت نتائجه اليوم؛ التقلب الضمني قد يتغير بقوة.</div></div></div></details>`;
 }
