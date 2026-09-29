@@ -185,6 +185,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .gappers{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}.gapper-list{border:1px solid #1f3451;border-radius:7px;background:#0d192b;padding:13px}.gapper-title{font-size:12px;font-weight:700;margin-bottom:9px}.gapper-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-top:1px solid #172a43;font:600 11px/1 var(--mono)}.gapper-row:first-of-type{border-top:0}.gapper-up{color:var(--buy)}.gapper-down{color:var(--sell)}
 .calendar-wrap{grid-column:1/-1;display:grid;grid-template-columns:1.1fr .9fr;gap:8px}.calendar-panel{border:1px solid #1f3451;border-radius:7px;background:#0d192b;overflow:hidden}.calendar-head{padding:14px;border-bottom:1px solid #1d304b;display:flex;justify-content:space-between;align-items:center}.calendar-head h3{font-size:14px}.source-tag{font:700 9px/1 var(--mono);color:var(--blue)}.event-row{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #172a43}.event-row:last-child{border-bottom:0}.event-time{font:700 12px/1 var(--mono);direction:ltr;color:#dce8f8}.event-title{font-size:12px;font-weight:600}.event-meta{font-size:9px;color:var(--muted);margin-top:5px}.impact{font:700 9px/1 var(--mono);padding:5px 7px;border-radius:4px}.impact.high{color:#fff;background:#b53b50}.impact.medium{color:#19130a;background:var(--gold)}.earn-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid #172a43}.earn-row:last-child{border-bottom:0}.earn-symbol{font:800 13px/1 var(--mono)}.earn-name{font-size:9px;color:var(--muted);margin-top:4px}.earn-time{font-size:10px;color:#87a0c0;text-align:left}.watch-tag{color:var(--gold);font-size:9px}.empty-mini{padding:24px 14px;text-align:center;color:var(--muted);font-size:11px}
 .v2-panel{grid-column:1/-1;border:1px solid #2a4568;border-radius:7px;background:linear-gradient(135deg,#10243c,#0d192b);padding:15px}.v2-heading{font-size:14px;font-weight:700;margin-bottom:10px}.v2-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.v2-metric{border:1px solid #2a405d;border-radius:6px;padding:11px;background:#0b1a2d}.v2-metric strong{display:block;font:700 14px/1.2 var(--mono);color:#e5f0ff}.v2-metric span{display:block;font-size:10px;color:#8ca3bd;margin-top:6px;line-height:1.5}.v2-note{font-size:11px;line-height:1.7;color:#9ab0ca;margin-top:12px}.v2-warning{color:var(--gold)}.v2-badge{display:inline-block;border:1px solid #33506f;border-radius:4px;padding:3px 7px;margin-top:7px;font-size:10px;color:#98b8d8}.calendar-widget{display:none;grid-column:1/-1;border:1px solid #243a56;border-radius:7px;overflow:hidden;background:#101b2b;padding:10px}.calendar-widget.active{display:block}.calendar-widget .tradingview-widget-container{height:560px;width:100%}.calendar-widget .tradingview-widget-container__widget{height:535px;width:100%}.calendar-widget a{color:#7eb3ff;font-size:10px}.calendar-disclosure{font-size:10px;color:#8093ab;line-height:1.5;margin-bottom:8px}
+.data-health{margin:0 2px 10px;color:#9ab0ca;font-size:12px;line-height:1.5}.data-health.warn{color:var(--gold)}.signal-now{padding:10px 14px;border-top:1px solid #243956;background:#10243c;color:#c9def6;font-size:12px;line-height:1.6}.signal-now strong{color:#fff}.signal-now.warn{color:var(--gold)}.bo-card details.signal-details{border-top:1px solid #243956}.bo-card details.signal-details summary{cursor:pointer;padding:10px 14px;color:#8fb6e8;font-size:12px}.bo-card details.signal-details summary::marker{color:#8fb6e8}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
 @media(min-width:621px){.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-alert,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
 @media(max-width:900px){.command-bar{grid-template-columns:1fr auto}.bot{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -213,7 +214,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
     </div>
     <div class="hd-right">
       <div class="mkt" id="mktState">—</div>
-      <div class="live-chip"><div class="live-dot"></div>LIVE</div>
+      <div class="live-chip" id="liveChip"><div class="live-dot"></div><span id="liveLabel">—</span></div>
     </div>
   </div>
 </header>
@@ -357,6 +358,7 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
   <div class="results-title" id="resultsTitle">الإشارات المكتشفة</div>
   <div class="results-note">AUTO REFRESH · 5 MIN</div>
 </div>
+<div class="data-health" id="dataHealth" role="status">جاري التحقق من البيانات...</div>
 <div class="cards" id="cards"></div>
 <div class="calendar-widget" id="calendarWidget" dir="ltr">
   <div class="calendar-disclosure" dir="rtl">تقويم الولايات المتحدة من TradingView. اضبط المنطقة الزمنية داخل التقويم وتحقق من وقت الخبر قبل التداول؛ إذا منع المتصفح عرضه افتح المصدر مباشرة.</div>
@@ -388,6 +390,24 @@ let mktView = 'overview';
 let srch    = '';
 const REFRESH = 5 * 60 * 1000;
 let scanInProgress = false;
+let scanError = false;
+let updatedAt = null;
+let health = {};
+
+function updateDataHealth() {
+  const age = updatedAt ? Math.max(0,Math.floor((Date.now()-Date.parse(updatedAt))/60000)) : null;
+  const active = isMarketScanWindow();
+  const stale = age===null || age>30 || (active && age>12);
+  const failed = health.failedSymbols || {};
+  const partial = Object.values(failed).some(count=>Number(count)>0);
+  const candleAge = health.intradayLatestCandleAt ? Math.max(0,Math.floor((Date.now()-health.intradayLatestCandleAt)/60000)) : null;
+  const candleStale = active && (candleAge===null || candleAge>15);
+  const el=document.getElementById('dataHealth');
+  const label=document.getElementById('liveLabel');
+  label.textContent=scanError?'تعذر التحديث':stale||candleStale?'بيانات قديمة':partial?'بيانات جزئية':active?'محدث':'خارج الجلسة';
+  el.classList.toggle('warn',scanError||stale||candleStale||partial);
+  el.textContent=age===null?'لا يوجد مسح ناجح محفوظ حتى الآن':`آخر مسح ناجح منذ ${age} دقيقة${candleAge===null?' · وقت شمعة اللحظي غير متاح':` · آخر شمعة لحظية منذ ${candleAge} دقيقة`}${partial?` · تعذر جلب بعض الرموز (لحظي ${failed.intraday||0}، سوق ${failed.market||0})`:''}${scanError?' · تعذر المسح الأخير':''}`;
+}
 
 // ═══════════════════════════════════════════════════════════════
 // STRATEGY SWITCH
@@ -428,7 +448,11 @@ function setTF(tf) {
 async function fetchData() {
   try {
     const res = await fetch('/api/signals',{cache:'no-store'});
+    if(!res.ok) throw new Error('Signals unavailable');
     const d   = await res.json();
+    updatedAt=d.updatedAt||null;
+    health=d.health||{};
+    updateDataHealth();
 
     document.getElementById('scanWrap').classList.toggle('on', d.status==='initializing');
     if(d.updatedAt) {
@@ -451,6 +475,8 @@ async function fetchData() {
     renderCards();
   } catch(e) {
     document.getElementById('ibUpdate').textContent = 'خطأ في الاتصال';
+    scanError=true;
+    updateDataHealth();
   }
 }
 
@@ -466,9 +492,11 @@ async function runLiveScan() {
   document.getElementById('scanWrap').classList.add('on');
   try {
     // /api/signals only reads stored results; /api/scan creates fresh ones.
-    await fetch('/api/scan',{cache:'no-store'});
+    const response=await fetch('/api/scan',{cache:'no-store'});
+    if(!response.ok) throw new Error('Scan failed');
+    scanError=false;
   } catch(e) {
-    // Keep showing the last successful scan if the live request fails.
+    scanError=true;
   } finally {
     scanInProgress = false;
     document.getElementById('scanWrap').classList.remove('on');
@@ -763,6 +791,24 @@ function renderIntraday() {
     const aligned = !context.available ? 'سياق السوق غير متاح' : context.bias==='neutral' ? 'السوق مختلط' : (buy&&context.bias==='call')||(!buy&&context.bias==='put') ? 'متوافق مع السوق' : 'عكس ميل السوق';
     const ageMinutes = Math.max(0,Math.floor((Date.now()-(Number(s.timestamp)+5*60*1000))/60000));
     const ageText = ageMinutes<5 ? 'إشارة جديدة' : `منذ ${ageMinutes} دقيقة`;
+    const quoteAge = s.latestPriceAt ? Math.max(0,Math.floor((Date.now()-s.latestPriceAt)/60000)) : Infinity;
+    const quoteFresh = quoteAge<=10 && !scanError && updatedAt && Date.now()-Date.parse(updatedAt)<12*60000;
+    const current = Number(s.latestPrice);
+    const entry = Number(s.entry);
+    const distance = quoteFresh && entry>0 ? (current-entry)/entry*100 : null;
+    const beyondT1 = quoteFresh && (buy ? current>=Number(s.t1) : current<=Number(s.t1));
+    const beyondStop = quoteFresh && (buy ? current<=Number(s.sl) : current>=Number(s.sl));
+    const status = !quoteFresh ? 'السعر الحالي غير مؤكد؛ تحقق قبل التصرف'
+      : s.session!=='open' || !isMarketScanWindow() ? 'خارج جلسة الأوبشن المعتادة'
+      : beyondStop ? 'تجاوز مستوى الوقف؛ الإشارة غير صالحة للدخول'
+      : beyondT1 ? 'وصل إلى T1؛ لا تطارد الدخول'
+      : ageMinutes>=20 ? 'إشارة قديمة؛ أعد تقييم السعر'
+      : 'إشارة حديثة؛ تحقق من سعر العقد والسيولة';
+    const sectorSymbol = ['NVDA','AMD','MU','INTC','QCOM','MRVL','AVGO'].includes(s.symbol) ? 'SMH'
+      : ['AAPL','MSFT','ORCL','NOW'].includes(s.symbol) ? 'XLK' : null;
+    const sector = (data.market.items||[]).find(item=>item.symbol===sectorSymbol);
+    const sectorFresh = sector && Date.now()-sector.timestamp<15*60000;
+    const sectorText = sectorFresh ? `${sectorSymbol} ${sector.direction==='up'?'صاعد':sector.direction==='down'?'هابط':'محايد'} الآن` : null;
     const conf = s.confidence||0;
     const modeText = s.mode==='breakout' ? 'اختراق لحظي' : 'انعكاس اتجاه';
     const modeColor = s.mode==='breakout' ? 'var(--blue)' : 'var(--purple)';
@@ -786,12 +832,14 @@ function renderIntraday() {
               <circle cx="26" cy="26" r="${r}" fill="none" stroke="${modeColor}" stroke-width="4"
                 stroke-dasharray="${dash} ${circ}" stroke-linecap="round"/>
             </svg>
-            <div class="conf-val" style="color:${modeColor}">${conf}%</div>
+            <div class="conf-val" style="color:${modeColor}">${conf}</div>
           </div>
-          <div style="text-align:center;font-size:8px;color:var(--muted);margin-top:2px;font-family:var(--mono)">CONF</div>
+          <div style="text-align:center;font-size:8px;color:var(--muted);margin-top:2px;font-family:var(--mono)">تقييم /100</div>
         </div>
       </div>
 
+      <div class="signal-now ${!quoteFresh||beyondStop||beyondT1||ageMinutes>=20?'warn':''}"><strong>${status}</strong><br>سعر التنبيه $${s.alertPrice} · سعر السهم ${quoteFresh?`$${current.toFixed(2)} (${distance>=0?'+':''}${distance.toFixed(2)}% من الدخول، قبل ${quoteAge} د)`:'غير متاح'} · ${ageText}${sectorText?` · ${sectorText}`:''}</div>
+      <details class="signal-details"><summary>عرض الأهداف والمؤشرات · أسعار السهم الأساسي</summary>
       <div class="bo-levels">
         <div class="bo-lv bo-lv-entry"><div class="bo-lv-val entry-v">$${s.entry}</div><div class="bo-lv-lbl">Entry ثابت</div></div>
         <div class="bo-lv bo-lv-alert"><div class="bo-lv-val alert-v">$${s.alertPrice}</div><div class="bo-lv-lbl">سعر التنبيه</div></div>
@@ -806,6 +854,7 @@ function renderIntraday() {
         <div class="bo-ema-i"><div class="bo-ema-v">$${s.ema20}</div><div class="bo-ema-l">EMA 20 · 15M</div></div>
         <div class="bo-ema-i"><div class="bo-ema-v">$${s.ema50}</div><div class="bo-ema-l">EMA 50 · 15M</div></div>
       </div>
+      </details>
 
       <div class="bo-tags">
         <span class="p ${buy?'p-gb':'p-gs'}">${buy?'▲ CALL':'▼ PUT'}</span>
@@ -1019,9 +1068,10 @@ function renderCalendar() {
     const values = [event.previous!=null?`السابق ${esc(event.previous)}`:'',event.forecast!=null?`المتوقع ${esc(event.forecast)}`:'',event.actual!=null?`الفعلي ${esc(event.actual)}`:''].filter(Boolean).join(' · ');
     return `<div class="event-row"><div><div class="event-time">${time}</div><div class="event-meta">${remaining}</div></div><div><div class="event-title">${esc(event.title)}</div><div class="event-meta">${values||'بتوقيت الرياض'}</div></div><span class="impact ${event.impact}">${event.impact==='high'?'مهم':'متوسط'}</span></div>`;
   }).join('');
-  const earningRows = earnings.map(row=>`<div class="earn-row"><div><div class="earn-symbol">${esc(row.symbol)} ${row.watched?'<span class="watch-tag">★ قائمتك</span>':''}</div><div class="earn-name">${esc(row.name)}</div></div><div class="earn-time">${esc(row.time)}${row.epsForecast?`<br>EPS ${esc(row.epsForecast)}`:''}</div></div>`).join('') || '<div class="empty-mini">لا توجد نتائج شركات متاحة اليوم</div>';
+  const earningRows = earnings.map(row=>`<div class="earn-row"><div><div class="earn-symbol">${esc(row.symbol)} ${row.watched?'<span class="watch-tag">★ قائمتك</span>':''}</div><div class="earn-name">${esc(row.name)}</div></div><div class="earn-time">${esc(row.time)}${row.epsForecast?`<br>EPS ${esc(row.epsForecast)}`:''}</div></div>`).join('') || `<div class="empty-mini">${calendar.earningsSource==='third-party'?'لم تظهر نتائج شركات في المصدر اليوم':'تعذر جلب نتائج الشركات؛ تحقق من مصدر آخر'}</div>`;
+  const calendarStatus=calendar.eventSource==='third-party' ? events.length?'تم جلب أحداث اليوم من المصدر الإضافي':'لم يُرجع المصدر الإضافي أحداثًا متوسطة أو عالية الأهمية اليوم' : 'تعذر جلب الأحداث آليًا؛ استخدم التقويم المدمج أدناه';
   document.getElementById('cards').innerHTML = `
-    <div class="v2-panel"><div class="v2-heading">الأحداث الاقتصادية الأمريكية · ${esc(calendar.date||'')}</div><div class="v2-note">التقويم المدمج من TradingView يظهر أسفل هذه البطاقات؛ يعرض الأحداث وتفاصيلها بحسب إعداد المنطقة الزمنية فيه. قائمة الأحداث البرمجية اختيارية ولا نعتمد على فراغها كدليل على عدم وجود أخبار.</div></div>
+    <div class="v2-panel"><div class="v2-heading">الأحداث الاقتصادية الأمريكية · ${esc(calendar.date||'')}</div><div class="v2-note">${calendarStatus}. التقويم المدمج من TradingView أسفل الصفحة؛ تحقق من المنطقة الزمنية وموعد الخبر قبل التداول.</div></div>
     <div class="calendar-wrap">
       ${eventRows?`<div class="calendar-panel"><div class="calendar-head"><h3>أحداث تم جلبها أيضًا</h3><span class="source-tag">مصدر إضافي</span></div>${eventRows}</div>`:''}
       <div class="calendar-panel"><div class="calendar-head"><h3>نتائج الشركات</h3><span class="source-tag">${calendar.earningsSource==='third-party'?'مصدر خارجي':'المصدر غير متاح'}</span></div>${earningRows}</div>
@@ -1049,6 +1099,7 @@ function toast(msg){ const el=document.getElementById('toast'); el.textContent=m
 window.addEventListener('DOMContentLoaded',()=>{
   updateMarket();
   setInterval(updateMarket, 30000);
+  setInterval(updateDataHealth, 30000);
   setTF('1h');
   refreshLive();
   setInterval(refreshLive, REFRESH);
