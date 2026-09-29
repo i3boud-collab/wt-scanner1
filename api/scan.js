@@ -391,6 +391,7 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
       breadthItems.push({
         symbol: sym,
         price: +latestQuote.close.toFixed(2),
+        timestamp: latestQuote.date.getTime(),
         previousClose: previousClose > 0 ? +previousClose.toFixed(2) : null,
         changePct: +changePct.toFixed(2),
         direction: changePct > 0.05 ? 'up' : changePct < -0.05 ? 'down' : 'flat',
@@ -485,6 +486,8 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
           session: marketSession(dates[i]),
           alertedAt,
           alertPrice,
+          latestPrice: +latestQuote.close.toFixed(2),
+          latestPriceAt: latestQuote.date.getTime(),
           entry,
           t1, t2, t3, tp: t3, sl,
           atr: planAtr,
@@ -523,6 +526,7 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
     breadth: {
       advancers, decliners, unchanged,
       total: breadthItems.length,
+      latestCandleAt: Math.max(0, ...breadthItems.map(item => item.timestamp || 0)) || null,
       averageChangePct: breadthItems.length ? +(breadthItems.reduce((sum, item) => sum + item.changePct, 0) / breadthItems.length).toFixed(2) : 0,
       leaders: ranked.filter(item => item.changePct > 0.05).slice(0, 5),
       laggards: ranked.filter(item => item.changePct < -0.05).slice(-5).reverse(),
@@ -658,7 +662,8 @@ async function scanCalendar() {
     const json = await fetchJsonWithTimeout(url, {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Origin': 'https://www.tradingview.com', 'Accept': 'application/json' },
     });
-    const rows = Array.isArray(json?.result) ? json.result : Array.isArray(json) ? json : [];
+    const rows = Array.isArray(json?.result) ? json.result : Array.isArray(json) ? json : null;
+    if (!rows) throw new Error('Unsupported calendar response');
     events = rows.map(event => {
       const rawDate = event.date ?? event.datetime ?? event.timestamp;
       const timestamp = typeof rawDate === 'number' ? rawDate * (rawDate < 1e12 ? 1000 : 1) : Date.parse(rawDate);
@@ -685,7 +690,8 @@ async function scanCalendar() {
     const json = await fetchJsonWithTimeout(url, {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json, text/plain, */*', 'Origin': 'https://www.nasdaq.com' },
     });
-    const rows = json?.data?.rows || json?.data?.calendar?.rows || [];
+    const rows = json?.data?.rows ?? json?.data?.calendar?.rows;
+    if (!Array.isArray(rows)) throw new Error('Unsupported earnings response');
     earnings = rows.map(row => ({
       symbol: row.symbol || '—',
       name: row.name || row.companyName || '',
@@ -732,6 +738,11 @@ module.exports = async (req, res) => {
       market: { ...market, watchlistBreadth: intraday.breadth, calendar },
       updatedAt:   now,
       symbolCount: SYMBOLS.length,
+      health: {
+        failedSymbols: { intraday: intraday.errorCount, breakout: breakout.errorCount,
+          market: market.errorCount, wt15m: tf15m.errorCount, wt1h: tf1h.errorCount, wt4h: tf4h.errorCount },
+        intradayLatestCandleAt: intraday.breadth.latestCandleAt,
+      },
     };
 
     await kvSet("wt_signals", result);
