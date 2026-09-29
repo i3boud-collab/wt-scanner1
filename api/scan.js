@@ -417,13 +417,17 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
       while (last15 >= 0 && quotes15[last15].date.getTime() + 15 * 60 * 1000 > Date.now()) last15--;
       if (last5 < 50 || last15 < 50) continue;
 
-      const trendCall = ema9_15[last15] > ema20_15[last15] && closes15[last15] > ema20_15[last15];
-      const trendPut = ema9_15[last15] < ema20_15[last15] && closes15[last15] < ema20_15[last15];
-
       // Keep signals from the six most recent completed 5m candles (30 minutes).
       for (let i = Math.max(30, last5 - 5); i <= last5; i++) {
         const ts = dates[i].getTime();
         if (ts < cutoffMs) continue;
+        // Use the latest 15m candle that had actually closed at this signal's close.
+        let trendIndex = last15;
+        const signalClose = ts + 5 * 60 * 1000;
+        while (trendIndex >= 50 && quotes15[trendIndex].date.getTime() + 15 * 60 * 1000 > signalClose) trendIndex--;
+        if (trendIndex < 50) continue;
+        const trendCall = ema9_15[trendIndex] > ema20_15[trendIndex] && closes15[trendIndex] > ema20_15[trendIndex];
+        const trendPut = ema9_15[trendIndex] < ema20_15[trendIndex] && closes15[trendIndex] < ema20_15[trendIndex];
 
         const close = closes[i];
         const rsi = rsiArr[i];
@@ -492,9 +496,9 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
           avgVol: Math.round(avgVol),
           highVol,
           volConf: highVol,
-          ema9: +ema9_15[last15].toFixed(2),
-          ema20: +ema20_15[last15].toFixed(2),
-          ema50: +ema50_15[last15].toFixed(2),
+          ema9: +ema9_15[trendIndex].toFixed(2),
+          ema20: +ema20_15[trendIndex].toFixed(2),
+          ema50: +ema50_15[trendIndex].toFixed(2),
         });
       }
     } catch (e) { errors.push(`${sym}: ${e.message}`); }
