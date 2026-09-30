@@ -186,6 +186,41 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
 .calendar-wrap{grid-column:1/-1;display:grid;grid-template-columns:1.1fr .9fr;gap:8px}.calendar-panel{border:1px solid #1f3451;border-radius:7px;background:#0d192b;overflow:hidden}.calendar-head{padding:14px;border-bottom:1px solid #1d304b;display:flex;justify-content:space-between;align-items:center}.calendar-head h3{font-size:14px}.source-tag{font:700 9px/1 var(--mono);color:var(--blue)}.event-row{display:grid;grid-template-columns:74px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid #172a43}.event-row:last-child{border-bottom:0}.event-time{font:700 12px/1 var(--mono);direction:ltr;color:#dce8f8}.event-title{font-size:12px;font-weight:600}.event-meta{font-size:9px;color:var(--muted);margin-top:5px}.impact{font:700 9px/1 var(--mono);padding:5px 7px;border-radius:4px}.impact.high{color:#fff;background:#b53b50}.impact.medium{color:#19130a;background:var(--gold)}.earn-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid #172a43}.earn-row:last-child{border-bottom:0}.earn-symbol{font:800 13px/1 var(--mono)}.earn-name{font-size:9px;color:var(--muted);margin-top:4px}.earn-time{font-size:10px;color:#87a0c0;text-align:left}.watch-tag{color:var(--gold);font-size:9px}.empty-mini{padding:24px 14px;text-align:center;color:var(--muted);font-size:11px}
 .v2-panel{grid-column:1/-1;border:1px solid #2a4568;border-radius:7px;background:linear-gradient(135deg,#10243c,#0d192b);padding:15px}.v2-heading{font-size:14px;font-weight:700;margin-bottom:10px}.v2-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.v2-metric{border:1px solid #2a405d;border-radius:6px;padding:11px;background:#0b1a2d}.v2-metric strong{display:block;font:700 14px/1.2 var(--mono);color:#e5f0ff}.v2-metric span{display:block;font-size:10px;color:#8ca3bd;margin-top:6px;line-height:1.5}.v2-note{font-size:11px;line-height:1.7;color:#9ab0ca;margin-top:12px}.v2-warning{color:var(--gold)}.v2-badge{display:inline-block;border:1px solid #33506f;border-radius:4px;padding:3px 7px;margin-top:7px;font-size:10px;color:#98b8d8}.calendar-widget{display:none;grid-column:1/-1;border:1px solid #243a56;border-radius:7px;overflow:hidden;background:#101b2b;padding:10px}.calendar-widget.active{display:block}.calendar-widget .tradingview-widget-container{height:560px;width:100%}.calendar-widget .tradingview-widget-container__widget{height:535px;width:100%}.calendar-widget a{color:#7eb3ff;font-size:10px}.calendar-disclosure{font-size:10px;color:#8093ab;line-height:1.5;margin-bottom:8px}
 .data-health{margin:0 2px 10px;color:#9ab0ca;font-size:12px;line-height:1.5}.data-health.warn{color:var(--gold)}.signal-now{padding:10px 14px;border-top:1px solid #243956;background:#10243c;color:#c9def6;font-size:12px;line-height:1.6}.signal-now strong{color:#fff}.signal-now.warn{color:var(--gold)}.bo-card details.signal-details{border-top:1px solid #243956}.bo-card details.signal-details summary{cursor:pointer;padding:10px 14px;color:#8fb6e8;font-size:12px}.bo-card details.signal-details summary::marker{color:#8fb6e8}
+
+/* Refined signal and market workspace */
+body{background:#080f1c;background-image:radial-gradient(ellipse 60% 30% at 75% -8%,rgba(41,115,217,.11),transparent 70%)}
+.shell{max-width:1340px}.control-deck{border-radius:14px;box-shadow:0 14px 42px rgba(0,0,0,.13)}
+.strat-tabs{padding-inline:14px}.strat-tab{min-height:52px}.results-head{margin-top:22px}.results-title{font-size:18px;letter-spacing:-.02em}.data-health{margin-bottom:14px}
+.cards{gap:14px;align-items:start}
+.card,.bo-card,.market-card{border:1px solid #273b59;border-radius:16px;background:linear-gradient(155deg,#111f34,#0d192b 66%);box-shadow:0 10px 30px rgba(0,0,0,.12);transition:border-color .2s,transform .2s,box-shadow .2s}
+.card:hover,.bo-card:hover,.market-card:hover{border-color:#4674ad;transform:translateY(-2px);box-shadow:0 18px 38px rgba(0,0,0,.21)}
+.card.buy,.bo-card.buy,.market-card.up{box-shadow:inset 3px 0 0 var(--buy),0 10px 30px rgba(0,0,0,.12)}
+.card.sell,.bo-card.sell,.market-card.down{box-shadow:inset 3px 0 0 var(--sell),0 10px 30px rgba(0,0,0,.12)}
+.ch,.bo-head{padding:18px 18px 15px}.ch-left,.bo-left{gap:13px}.arr,.bo-icon{width:42px;height:42px;border-radius:12px;font-size:18px}.sym,.bo-sym{font-size:22px;letter-spacing:-.03em}.ch-date,.bo-type{font-size:11px;line-height:1.4}
+.pills,.bo-tags{gap:7px;padding-inline:18px}.p{border-radius:7px;font-size:10px;padding:5px 8px}.conf-ring{width:52px}.bo-right{min-width:55px}
+.signal-now{margin:0 12px 12px;border:1px solid #284669;border-radius:11px;background:#122a45;padding:12px 14px;font-size:13px}.signal-now strong{display:inline-block;margin-bottom:3px;font-size:14px}.signal-now.warn{background:#2b2430;border-color:#594252}.signal-now.warn strong{color:#ffd07a}
+.bo-card details.signal-details{border-top:1px solid #233752}.bo-card details.signal-details summary{list-style:none;position:relative;padding:13px 18px;font-weight:700;color:#9fc8ff}.bo-card details.signal-details summary::-webkit-details-marker{display:none}.bo-card details.signal-details summary::after{content:'⌄';float:left;font-size:17px;line-height:12px}.bo-card details.signal-details[open] summary::after{content:'⌃'}
+.bo-levels{background:#0c192b}.bo-lv{padding:13px 5px}.bo-lv-val{font-size:13px}.bo-lv-lbl{font-size:10px}.bo-ema{background:#0e1b2e}.bo-ema-i{padding:11px 5px}.bo-ema-v{font-size:12px}.bo-ema-l{font-size:10px}.bo-tags{padding-block:14px}
+.market-hero{grid-column:1/-1;position:relative;overflow:hidden;border:1px solid #315376;border-radius:18px;background:radial-gradient(circle at 7% 0%,rgba(45,130,240,.18),transparent 42%),linear-gradient(125deg,#142c49,#0e1c31 78%);padding:22px 24px}
+.market-hero::before{content:'';position:absolute;width:190px;height:190px;border:1px solid rgba(101,164,245,.14);border-radius:50%;left:-65px;top:-95px;pointer-events:none}
+.market-eyebrow{font:700 10px/1.2 var(--mono);letter-spacing:.12em;color:#74adfb;text-transform:uppercase}.market-hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}.market-hero h2{font-size:23px;margin-top:8px;line-height:1.15}.market-hero .v2-note{font-size:13px;max-width:760px;color:#aac0dd}.market-hero .v2-badge{margin-top:14px;background:rgba(10,26,45,.45)}
+.market-bias{flex-shrink:0;padding:9px 12px;border-radius:9px;font-size:12px;font-weight:700;border:1px solid #52627b;background:rgba(255,255,255,.05);color:#c9d9ee}.market-bias.call{color:#4ce2b2;border-color:#256b5e;background:rgba(0,196,140,.1)}.market-bias.put{color:#ff8293;border-color:#784252;background:rgba(240,79,103,.1)}
+.market-hero .v2-grid{margin-top:19px;grid-template-columns:repeat(3,minmax(0,1fr))}.market-hero .v2-metric{border-color:#2a496a;border-radius:11px;background:rgba(8,20,37,.55);padding:13px 15px}.market-hero .v2-metric strong{font-size:19px}.market-hero .v2-metric span{font-size:11px;margin-top:6px}
+.market-summary{gap:10px;border:0;background:transparent;overflow:visible}.market-summary>div{border:1px solid #263e5d;border-radius:13px;background:#101e32;padding:18px;min-height:110px}.market-summary .summary-main{background:linear-gradient(130deg,#18375a,#11243c)}.summary-value{font-size:22px}.summary-label{font-size:12px}.summary-help{font-size:10px;line-height:1.5}
+.market-insights{gap:12px}.insight-card,.breadth-box,.gapper-list,.calendar-panel{border-color:#263e5d;border-radius:13px;background:linear-gradient(145deg,#122239,#0e1b2e);padding:17px}.insight-card{min-height:110px}.insight-title,.breadth-lbl{font-size:12px}.insight-value{font-size:19px}.insight-note{font-size:11px;color:#92a9c8}
+.market-card{overflow:hidden}.market-card-head{padding:20px 19px;gap:12px}.market-symbol{font-size:24px}.market-name{font-size:12px}.market-price{font-size:21px}.market-change{display:inline-block;margin-top:8px;border-radius:7px;padding:5px 8px;background:rgba(0,196,140,.09);font-size:12px}.market-change.down{background:rgba(240,79,103,.1)}.market-change.flat{background:rgba(244,183,64,.1)}
+.market-meta{background:#0c182a}.market-meta>div{padding:13px 5px}.market-meta .bo-ema-v{font-size:13px}.market-meta .bo-ema-l{font-size:10px}.market-reading{padding:14px 18px;font-size:11px;line-height:1.65}
+.market-guide{border-color:#263e5d;border-radius:13px}.market-guide summary{font-size:14px;padding:17px}.guide-grid{gap:11px;padding:0 14px 14px}.guide-item{border-radius:10px;padding:15px}.guide-title{font-size:13px}.guide-text{font-size:11px}
+.breadth-panel,.gappers,.calendar-wrap{gap:12px}.breadth-box{min-height:116px}.breadth-num{font-size:25px}.gapper-title{font-size:14px}.gapper-row{padding:11px 0;font-size:12px}.calendar-head{padding:0 0 12px}.calendar-head h3{font-size:15px}.event-row,.earn-row{padding:14px 0}.event-title{font-size:13px}.event-meta,.earn-name{font-size:11px}
+.market-section-title{grid-column:1/-1;margin:8px 3px -3px;color:#dce9fa;font-size:14px;font-weight:700}.market-section-title span{color:#8198b8;font-size:11px;font-weight:400;margin-inline-start:8px}
+@media(max-width:900px){.market-hero .v2-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){
+  .shell{padding-inline:12px}.strat-tabs{padding-inline:6px}.strat-tab{min-height:52px}.results-title{font-size:17px}.cards{gap:12px}
+  .card,.bo-card,.market-card{border-radius:14px}.ch,.bo-head{padding:16px}.sym,.bo-sym{font-size:21px}.signal-now{font-size:12px}.signal-now strong{font-size:13px}
+  .market-hero{padding:19px 17px}.market-hero h2{font-size:20px}.market-hero-top{display:block}.market-bias{display:inline-flex;margin-top:12px}.market-hero .v2-grid{grid-template-columns:1fr 1fr;gap:8px}.market-hero .v2-metric:first-child{grid-column:1/-1}.market-hero .v2-metric strong{font-size:16px}.market-hero .v2-metric span{font-size:10px}
+  .market-summary{grid-template-columns:1fr 1fr;gap:8px}.market-summary>div{padding:14px;min-height:96px}.market-summary .summary-main{grid-column:1/-1;min-height:80px}.summary-value{font-size:18px}.market-insights{grid-template-columns:1fr 1fr;gap:8px}.insight-card{min-height:110px;padding:13px}.insight-value{font-size:15px}.insight-note{font-size:10px}
+  .breadth-panel{grid-template-columns:1fr 1fr;gap:8px}.breadth-box{min-height:100px;padding:13px}.breadth-num{font-size:21px}.gappers,.calendar-wrap{grid-template-columns:1fr}.market-card-head{padding:17px}.market-symbol{font-size:22px}.market-price{font-size:19px}.market-meta>div{padding:11px 3px}.market-meta .bo-ema-v{font-size:12px}
+}
 .toast{background:#13233a;border-color:#2a4161;border-radius:6px}
 @media(min-width:621px){.bo-levels{grid-template-columns:repeat(6,1fr)}.bo-lv-entry,.bo-lv-alert,.bo-lv-stop,.bo-lv-target{grid-column:span 1}}
 @media(max-width:900px){.command-bar{grid-template-columns:1fr auto}.bot{grid-column:1/-1}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -198,6 +233,13 @@ header{height:58px;padding:0 20px;background:#0b1627;border-color:var(--line);ba
   .breadth-panel{grid-template-columns:1fr 1fr}.gappers,.calendar-wrap{grid-template-columns:1fr}.event-row{grid-template-columns:64px 1fr auto;padding-inline:10px}
   .v2-grid{grid-template-columns:1fr}.calendar-widget .tradingview-widget-container{height:600px}.calendar-widget .tradingview-widget-container__widget{height:575px}
 }
+@media(max-width:620px){
+  .shell{padding:13px 12px calc(34px + var(--sab))}.card,.bo-card,.market-card{border-radius:14px}
+  .market-hero .v2-grid{grid-template-columns:1fr 1fr}.market-hero .v2-metric:first-child{grid-column:1/-1}
+  .market-summary{gap:8px;border:0;background:transparent}.market-summary>div{border-radius:13px}
+  .calendar-panel{padding:15px}.event-row,.earn-row{padding:13px 0}
+}
+@media(prefers-reduced-motion:reduce){.card,.bo-card,.market-card{animation:none;transition:none}.live-dot{animation:none}}
 </style>
 </head>
 <body>
@@ -922,10 +964,10 @@ function renderMarket() {
   const vixZone = !vixItem ? 'غير متاح' : vixItem.price<15 ? 'تقلب منخفض' : vixItem.price<20 ? 'تقلب معتدل' : vixItem.price<30 ? 'تقلب مرتفع' : 'تقلب شديد';
   const context=optionsContext();
   const summary = `
-    <div class="v2-panel"><div class="v2-heading">عدسة الأوبشن قبل الدخول</div>
+    <div class="market-hero"><div class="market-hero-top"><div><div class="market-eyebrow">MARKET PULSE · سياق تداول قائمتك</div><h2>عدسة السوق للأوبشن</h2></div><span class="market-bias ${context.available?context.bias:''}">${!context.available?'بيانات غير مكتملة':context.bias==='call'?'ميل CALL':context.bias==='put'?'ميل PUT':'انتظار / مختلط'}</span></div>
       <div class="v2-grid">
-        <div class="v2-metric"><strong>${context.bias==='call'?'ميل CALL':context.bias==='put'?'ميل PUT':'انتظار / مختلط'}</strong><span>توافق SPY وQQQ مع اتساع قائمتك والعقود المستقبلية إن توفرت</span></div>
-        <div class="v2-metric"><strong>${context.available?`${context.breadth.advancers}↑ / ${context.breadth.decliners}↓`:'—'}</strong><span>اتساع الأسهم الحالية؛ ليس السوق الأمريكي كله</span></div>
+        <div class="v2-metric"><strong>${spy?`${spy.changePct>0?'+':''}${spy.changePct}%`: '—'} SPY · ${qqq?`${qqq.changePct>0?'+':''}${qqq.changePct}%`:'—'} QQQ</strong><span>حركة المؤشرين من الإغلاق السابق · تحقق من حداثة البيانات</span></div>
+        <div class="v2-metric"><strong>${context.available?`${context.breadth.advancers}↑ / ${context.breadth.decliners}↓`:'—'}</strong><span>صعود وهبوط أسهم قائمتك الحالية</span></div>
         <div class="v2-metric"><strong>${context.vixText}</strong><span>التقلب المتوقع؛ ليس سعر عقدك أو IV الخاص به</span></div>
       </div><div class="v2-note">${context.summary} <span class="v2-warning">${context.eventNote}</span></div>
       <div class="v2-badge">لا توجد هنا أسعار عقود أو Greeks أو سيولة الخيارات؛ افحص السبريد وموعد الانتهاء في وسيطك</div>
@@ -936,12 +978,14 @@ function renderMarket() {
       <div><div class="summary-value">${data.market.breadth ?? 0}/${data.market.breadthTotal ?? 4}</div><div class="summary-label">اتساع الصعود</div><div class="summary-help">عدد المؤشرات المرتفعة عن إغلاق أمس</div></div>
       <div><div class="summary-value">${sessionText}</div><div class="summary-label">جلسة نيويورك</div><div class="summary-help">PRE قبل 9:30 · OPEN حتى 4:00 ET</div></div>
     </div>
+    <div class="market-section-title">قراءة سريعة <span>حركة السوق واتجاه التقنية</span></div>
     <div class="market-insights">
       <div class="insight-card"><div class="insight-title">شهية المخاطرة</div><div class="insight-value">${riskMode}</div><div class="insight-note">مزيج من اتجاه المؤشرات وحركة VIX</div></div>
       <div class="insight-card"><div class="insight-title">الأقوى اليوم</div><div class="insight-value">${strongest?.symbol||'—'} ${strongest?`${strongest.changePct>0?'+':''}${strongest.changePct}%`:''}</div><div class="insight-note">أعلى تغير من الإغلاق السابق</div></div>
       <div class="insight-card"><div class="insight-title">الأضعف اليوم</div><div class="insight-value">${weakest?.symbol||'—'} ${weakest?`${weakest.changePct>0?'+':''}${weakest.changePct}%`:''}</div><div class="insight-note">أقل تغير من الإغلاق السابق</div></div>
       <div class="insight-card"><div class="insight-title">قيادة التقنية</div><div class="insight-value">${techLead==null?'—':`${techLead>0?'+':''}${techLead}%`}</div><div class="insight-note">فرق أداء QQQ عن SPY؛ الموجب يعني تفوق التقنية</div></div>
     </div>
+    <div class="market-section-title">المؤشرات الرئيسية <span>السعر والتغير والزخم</span></div>
     <details class="market-guide">
       <summary>كيف أقرأ أرقام السوق؟</summary>
       <div class="guide-grid">
@@ -1010,16 +1054,20 @@ function renderPreMarket(allItems) {
   let items = allItems.filter(item=>item.group==='futures'||item.group==='macro');
   if(srch){ const q=srch.toUpperCase(); items=items.filter(item=>item.symbol.includes(q)||item.name.toUpperCase().includes(q)); }
   const breadth = data.market.watchlistBreadth || {advancers:0,decliners:0,unchanged:0,total:0,averageChangePct:0,leaders:[],laggards:[]};
+  const inPre = data.market.session==='pre';
   const bias = breadth.advancers>breadth.decliners ? 'إيجابي' : breadth.decliners>breadth.advancers ? 'سلبي' : 'متوازن';
   const gapRows = (rows, cls, emptyText)=>rows.map(item=>`<div class="gapper-row"><span>${esc(item.symbol)}</span><span class="${cls}">${item.changePct>0?'+':''}${Number(item.changePct).toFixed(2)}%</span></div>`).join('') || `<div class="empty-mini">${emptyText}</div>`;
   const wrap = document.getElementById('cards');
   wrap.innerHTML = `
+    <div class="market-hero"><div class="market-hero-top"><div><div class="market-eyebrow">WATCHLIST · ${esc((data.market.session||'closed').toUpperCase())}</div><h2>${inPre?'حركة قائمتك قبل الافتتاح':'آخر حركة متاحة لقائمتك'}</h2></div><span class="market-bias">${breadth.total} سهم مرصود</span></div><div class="v2-note">التغير من إغلاق الجلسة السابقة، وليس فجوة الافتتاح الرسمية. اعتمد على وقت آخر تحديث أعلاه، خصوصًا خارج PRE.</div></div>
+    <div class="market-section-title">اتساع قائمتك <span>الأسهم التي تتابعها فقط</span></div>
     <div class="breadth-panel">
       <div class="breadth-box up"><div class="breadth-num">${breadth.advancers}/${breadth.total}</div><div class="breadth-lbl">أسهم القائمة صاعدة</div></div>
       <div class="breadth-box down"><div class="breadth-num">${breadth.decliners}/${breadth.total}</div><div class="breadth-lbl">أسهم القائمة هابطة</div></div>
       <div class="breadth-box"><div class="breadth-num">${Number(breadth.averageChangePct||0)>0?'+':''}${Number(breadth.averageChangePct||0).toFixed(2)}%</div><div class="breadth-lbl">متوسط حركة القائمة</div></div>
-      <div class="breadth-box"><div class="breadth-num">${bias}</div><div class="breadth-lbl">ميل الـPre-Market</div></div>
+      <div class="breadth-box"><div class="breadth-num">${bias}</div><div class="breadth-lbl">${inPre?'ميل ما قبل الافتتاح':'ميل آخر قراءة'}</div></div>
     </div>
+    <div class="market-section-title">الأكثر حركة <span>مقارنة بإغلاق أمس</span></div>
     <div class="gappers">
       <div class="gapper-list"><div class="gapper-title">أعلى ارتفاع عن إغلاق أمس</div>${gapRows(breadth.leaders||[],'gapper-up','لا توجد أسهم صاعدة حالياً')}</div>
       <div class="gapper-list"><div class="gapper-title">أكبر انخفاض عن إغلاق أمس</div>${gapRows(breadth.laggards||[],'gapper-down','لا توجد أسهم هابطة حالياً')}</div>
@@ -1032,6 +1080,7 @@ function renderPreMarket(allItems) {
         <div class="guide-item"><div class="guide-title">الفرق عن إغلاق أمس</div><div class="guide-text">النسبة تقارن آخر سعر متاح في الـPre-Market بآخر إغلاق يومي مكتمل. الموجب ارتفاع والسالب انخفاض، ولا تعتبر وحدها إشارة دخول.</div></div>
       </div>
     </details>
+    <div class="market-section-title">العقود المستقبلية والعوامل العامة</div>
     ${items.length?items.map(compactMarketCard).join(''):emptyHTML(0)}`;
 }
 
@@ -1042,12 +1091,13 @@ function renderSectors(allItems) {
   const wrap = document.getElementById('cards');
   if(!items.length){ wrap.innerHTML=emptyHTML(0); return; }
   wrap.innerHTML = `
+    <div class="market-hero"><div class="market-hero-top"><div><div class="market-eyebrow">SECTOR ROTATION</div><h2>قيادة القطاعات</h2></div><span class="market-bias">${items.length} صناديق قطاعية</span></div><div class="v2-note">مقارنة أداء صناديق القطاعات من الإغلاق السابق. راقب توافق السهم مع قطاعه، ولا تعتبر ترتيب الصناديق إشارة مستقلة.</div></div>
     <div class="market-insights">
       <div class="insight-card"><div class="insight-title">القطاع القائد</div><div class="insight-value">${esc(leader.symbol)} ${leader.changePct>0?'+':''}${leader.changePct}%</div><div class="insight-note">الأقوى مقارنة بإغلاق أمس</div></div>
       <div class="insight-card"><div class="insight-title">القطاع الأضعف</div><div class="insight-value">${esc(laggard.symbol)} ${laggard.changePct>0?'+':''}${laggard.changePct}%</div><div class="insight-note">قد يحدّد الأسهم التي نتجنبها</div></div>
       <div class="insight-card"><div class="insight-title">قطاعات صاعدة</div><div class="insight-value">${items.filter(item=>item.direction==='up').length}/${items.length}</div><div class="insight-note">اتساع الحركة بين القطاعات</div></div>
       <div class="insight-card"><div class="insight-title">طريقة الاستخدام</div><div class="insight-value">اتبع القوة</div><div class="insight-note">فضّل إشارة السهم المتوافقة مع اتجاه قطاعه</div></div>
-    </div>${items.map(compactMarketCard).join('')}`;
+    </div><div class="market-section-title">تفاصيل القطاعات <span>رتبت حسب التغير اليومي</span></div>${items.map(compactMarketCard).join('')}`;
 }
 
 function remainingText(timestamp) {
@@ -1071,7 +1121,7 @@ function renderCalendar() {
   const earningRows = earnings.map(row=>`<div class="earn-row"><div><div class="earn-symbol">${esc(row.symbol)} ${row.watched?'<span class="watch-tag">★ قائمتك</span>':''}</div><div class="earn-name">${esc(row.name)}</div></div><div class="earn-time">${esc(row.time)}${row.epsForecast?`<br>EPS ${esc(row.epsForecast)}`:''}</div></div>`).join('') || `<div class="empty-mini">${calendar.earningsSource==='third-party'?'لم تظهر نتائج شركات في المصدر اليوم':'تعذر جلب نتائج الشركات؛ تحقق من مصدر آخر'}</div>`;
   const calendarStatus=calendar.eventSource==='third-party' ? events.length?'تم جلب أحداث اليوم من المصدر الإضافي':'لم يُرجع المصدر الإضافي أحداثًا متوسطة أو عالية الأهمية اليوم' : 'تعذر جلب الأحداث آليًا؛ استخدم التقويم المدمج أدناه';
   document.getElementById('cards').innerHTML = `
-    <div class="v2-panel"><div class="v2-heading">الأحداث الاقتصادية الأمريكية · ${esc(calendar.date||'')}</div><div class="v2-note">${calendarStatus}. التقويم المدمج من TradingView أسفل الصفحة؛ تحقق من المنطقة الزمنية وموعد الخبر قبل التداول.</div></div>
+    <div class="market-hero"><div class="market-hero-top"><div><div class="market-eyebrow">EVENTS · ${esc(calendar.date||'')}</div><h2>تقويم اليوم</h2></div><span class="market-bias">بتوقيت الرياض</span></div><div class="v2-note">${calendarStatus}. التقويم المدمج من TradingView أسفل الصفحة؛ تحقق من المنطقة الزمنية وموعد الخبر قبل التداول.</div></div>
     <div class="calendar-wrap">
       ${eventRows?`<div class="calendar-panel"><div class="calendar-head"><h3>أحداث تم جلبها أيضًا</h3><span class="source-tag">مصدر إضافي</span></div>${eventRows}</div>`:''}
       <div class="calendar-panel"><div class="calendar-head"><h3>نتائج الشركات</h3><span class="source-tag">${calendar.earningsSource==='third-party'?'مصدر خارجي':'المصدر غير متاح'}</span></div>${earningRows}</div>
