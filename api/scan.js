@@ -476,11 +476,6 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
         const t2 = keepPlan ? previous.t2 : +(entry + dir * 1.0 * planAtr).toFixed(2);
         const t3 = keepPlan ? previous.t3 : +(entry + dir * 1.5 * planAtr).toFixed(2);
         const sl = keepPlan ? previous.sl : +(entry - dir * 0.75 * planAtr).toFixed(2);
-        // Check the price path after the signal candle. A later pullback must
-        // not make a previously reached target look available again.
-        const following = quotes5.slice(i + 1);
-        const touchedT1 = following.some(q => type === "buy" ? q.high >= t1 : q.low <= t1);
-        const touchedSL = following.some(q => type === "buy" ? q.low <= sl : q.high >= sl);
 
         signals.push({
           type, mode, symbol: sym,
@@ -495,7 +490,6 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
           latestPriceAt: latestQuote.date.getTime(),
           entry,
           t1, t2, t3, tp: t3, sl,
-          touchedT1, touchedSL,
           atr: planAtr,
           atrTimeframe: "5m",
           planVersion: "minute-v1",
