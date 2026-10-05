@@ -29,7 +29,16 @@ async function kvGet(key) {
 }
 
 // ── Fetch Yahoo Finance ─────────────────────────────────────────
+const yahooRequestCache = new Map();
 async function fetchYahoo(symbol, interval, range, includePrePost = false) {
+  const cacheKey = `${symbol}|${interval}|${range}|${includePrePost}`;
+  if (yahooRequestCache.has(cacheKey)) return yahooRequestCache.get(cacheKey);
+  const request = fetchYahooUncached(symbol, interval, range, includePrePost);
+  yahooRequestCache.set(cacheKey, request);
+  return request;
+}
+
+async function fetchYahooUncached(symbol, interval, range, includePrePost = false) {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=${interval}&range=${range}&includePrePost=${includePrePost ? "true" : "false"}`;
   const res = await fetch(url, {
     headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" },
@@ -42,6 +51,7 @@ async function fetchYahoo(symbol, interval, range, includePrePost = false) {
   const timestamps = result.timestamp || [];
   const quote      = result.indicators?.quote?.[0] || {};
   const closes  = quote.close  || [];
+  const opens   = quote.open   || [];
   const highs   = quote.high   || [];
   const lows    = quote.low    || [];
   const volumes = quote.volume || [];
@@ -51,7 +61,7 @@ async function fetchYahoo(symbol, interval, range, includePrePost = false) {
     if (closes[i] != null && highs[i] != null && lows[i] != null) {
       valid.push({
         date:   new Date(timestamps[i] * 1000),
-        close:  closes[i], high: highs[i],
+        open: opens[i] ?? closes[i], close: closes[i], high: highs[i],
         low:    lows[i],   volume: volumes[i] || 0,
       });
     }
@@ -535,6 +545,274 @@ async function scanIntraday(previousSignals = [], scanStartedAt = new Date().toI
 }
 
 // ════════════════════════════════════════════════════════════════
+// STRATEGY 4: Confirmed-pivot wedge setups (5m + 15m)
+// Uses closed candles only. A pivot is usable only after its right-side bars
+// have closed, so historical detections do not look into the future.
+// ════════════════════════════════════════════════════════════════
+const WEDGE_CFG = {
+  pivotLeft: 2, pivotRight: 2, minBarsBetweenPivots: 3,
+  minDuration: 12, maxDuration: 60, minConvergence: 0.18,
+  breakoutAtr: 0.06, stopAtrBuffer: 0.18,
+};
+
+function linearFit(points) {
+  const n = points.length;
+  if (n < 2) return null;
+  const sx = points.reduce((sum, point) => sum + point.index, 0);
+  const sy = points.reduce((sum, point) => sum + point.price, 0);
+  const sxx = points.reduce((sum, point) => sum + point.index ** 2, 0);
+  const sxy = points.reduce((sum, point) => sum + point.index * point.price, 0);
+  const denominator = n * sxx - sx ** 2;
+  if (!denominator) return null;
+  const slope = (n * sxy - sx * sy) / denominator;
+  const intercept = (sy - slope * sx) / n;
+  const mean = sy / n;
+  const total = points.reduce((sum, point) => sum + (point.price - mean) ** 2, 0);
+  const residual = points.reduce((sum, point) => sum + (point.price - (intercept + slope * point.index)) ** 2, 0);
+  return { slope, intercept, r2: total ? Math.max(0, 1 - residual / total) : 1, at: index => intercept + slope * index };
+}
+
+function confirmedPivots(highs, lows, endIndex, left = 2, right = 2) {
+  const highsOut = [], lowsOut = [];
+  for (let i = left; i <= endIndex - right; i++) {
+    let isHigh = true, isLow = true;
+    for (let j = i - left; j <= i + right; j++) {
+      if (j === i) continue;
+      if (highs[i] <= highs[j]) isHigh = false;
+      if (lows[i] >= lows[j]) isLow = false;
+    }
+    if (isHigh && (!highsOut.length || i - highsOut.at(-1).index >= WEDGE_CFG.minBarsBetweenPivots)) highsOut.push({ index: i, price: highs[i] });
+    if (isLow && (!lowsOut.length || i - lowsOut.at(-1).index >= WEDGE_CFG.minBarsBetweenPivots)) lowsOut.push({ index: i, price: lows[i] });
+  }
+  return { highs: highsOut, lows: lowsOut };
+}
+
+function sessionVWAP(quotes, endIndex) {
+  const key = nyDateKey(quotes[endIndex].date);
+  let value = 0, volume = 0;
+  for (let i = endIndex; i >= 0 && nyDateKey(quotes[i].date) === key; i--) {
+    const v = Number(quotes[i].volume || 0);
+    value += ((quotes[i].high + quotes[i].low + quotes[i].close) / 3) * v;
+    volume += v;
+  }
+  return volume ? value / volume : quotes[endIndex].close;
+}
+
+function wedgeGrade(score) {
+  return score >= 80 ? 'A+' : score >= 70 ? 'A' : score >= 60 ? 'B' : 'Weak';
+}
+
+function marketPoints(type, mood) {
+  if (mood === 'neutral' || !mood) return 5;
+  return (type === 'buy' && mood === 'bullish') || (type === 'sell' && mood === 'bearish') ? 10 : 0;
+}
+
+function applyWedgeMarketBias(result, market) {
+  result.signals.forEach(signal => {
+    if (signal.scoreFrozen) return;
+    // A historical signal cannot use a market snapshot from a later candle.
+    const signalClose = signal.signalTimestamp;
+    const core = ['SPY', 'QQQ'].map(symbol => market?.items?.find(item => item.symbol === symbol));
+    const breadthTime = Number(market?.watchlistBreadth?.latestCandleAt);
+    const valid = !!signal.entry && market?.session === 'open'
+      && core.every(item => item && Number(item.timestamp) <= signalClose && signalClose - Number(item.timestamp) <= 15 * 60000)
+      && breadthTime > 0 && breadthTime <= signalClose && signalClose - breadthTime <= 15 * 60000;
+    const breadth = market?.watchlistBreadth;
+    const mood = !valid ? 'neutral'
+      : core.every(item => item.direction === 'up') && breadth.advancers > breadth.decliners ? 'bullish'
+      : core.every(item => item.direction === 'down') && breadth.decliners > breadth.advancers ? 'bearish' : 'neutral';
+    const points = marketPoints(signal.type, mood);
+    signal.marketBias = mood;
+    signal.scoreParts.market = points;
+    signal.score = Math.min(100, signal.baseScore + points);
+    signal.grade = wedgeGrade(signal.score);
+    if (signal.entry) signal.scoreFrozen = true;
+  });
+  result.signals.sort((a, b) => {
+    const stateRank = { TRIGGERED: 5, T1_HIT: 4, T2_HIT: 3, READY: 2, FORMING: 1 };
+    return (stateRank[b.status] || 0) - (stateRank[a.status] || 0) || b.score - a.score || b.signalTimestamp - a.signalTimestamp;
+  });
+  return result;
+}
+
+function updateWedgeLifecycle(setup, quotes, lastClosed) {
+  if (!setup.entry || !['TRIGGERED', 'T1_HIT', 'T2_HIT'].includes(setup.status)) return setup;
+  const buy = setup.type === 'buy';
+  let status = setup.status;
+  const hits = { ...(setup.hits || {}) };
+  const candleMs = (setup.timeframe === '5m' ? 5 : 15) * 60000;
+  for (let i = 0; i <= lastClosed; i++) {
+    const candle = quotes[i];
+    if (candle.date.getTime() < setup.signalTimestamp) continue;
+    const hitTime = candle.date.getTime() + candleMs;
+    // If stop and target occur inside the same candle, use the conservative outcome.
+    if (buy ? candle.low <= setup.stop : candle.high >= setup.stop) { status = 'STOPPED'; hits.stopped ||= hitTime; break; }
+    if (buy ? candle.high >= setup.t1 : candle.low <= setup.t1) hits.t1 ||= hitTime;
+    if (buy ? candle.high >= setup.t2 : candle.low <= setup.t2) hits.t2 ||= hitTime;
+    if (buy ? candle.high >= setup.t3 : candle.low <= setup.t3) { hits.t3 ||= hitTime; status = 'T3_HIT'; break; }
+    if (hits.t2) status = 'T2_HIT';
+    else if (hits.t1) status = 'T1_HIT';
+  }
+  return { ...setup, status, hits, finalResult: ['STOPPED', 'T3_HIT'].includes(status) ? status : null };
+}
+
+function detectWedgeAt(symbol, timeframe, quotes, i, arrays, previousById, scanStartedAt) {
+  const { highs, lows, closes, volumes, atr, ema9, ema20, ema50 } = arrays;
+  if (!atr[i] || i < WEDGE_CFG.minDuration) return null;
+  const pivots = confirmedPivots(highs, lows, i, WEDGE_CFG.pivotLeft, WEDGE_CFG.pivotRight);
+  const recentHighs = pivots.highs.filter(point => i - point.index <= WEDGE_CFG.maxDuration).slice(-3);
+  const recentLows = pivots.lows.filter(point => i - point.index <= WEDGE_CFG.maxDuration).slice(-3);
+  if (recentHighs.length < 3 || recentLows.length < 3) return null;
+  const upper = linearFit(recentHighs), lower = linearFit(recentLows);
+  if (!upper || !lower || upper.r2 < 0.35 || lower.r2 < 0.35) return null;
+  const startIndex = Math.min(recentHighs[0].index, recentLows[0].index);
+  const duration = i - startIndex;
+  if (duration < WEDGE_CFG.minDuration || duration > WEDGE_CFG.maxDuration) return null;
+  const startGap = upper.at(startIndex) - lower.at(startIndex);
+  const currentGap = upper.at(i) - lower.at(i);
+  if (startGap <= 0 || currentGap <= 0) return null;
+  const convergence = 1 - currentGap / startGap;
+  if (convergence < WEDGE_CFG.minConvergence || convergence > 0.88) return null;
+
+  let pattern = null, type = null;
+  if (upper.slope > 0 && lower.slope > upper.slope) { pattern = 'rising_wedge'; type = 'sell'; }
+  if (upper.slope < 0 && lower.slope > upper.slope) { pattern = 'falling_wedge'; type = 'buy'; }
+  if (!pattern) return null;
+
+  const upperNow = upper.at(i), lowerNow = lower.at(i), close = closes[i];
+  const previousClose = closes[i - 1];
+  const breakoutDistance = type === 'buy' ? close - upperNow : lowerNow - close;
+  const body = Math.abs(close - quotes[i].open);
+  const avgVolume = volumes.slice(Math.max(0, i - 20), i).reduce((sum, value) => sum + value, 0) / Math.max(1, Math.min(20, i));
+  const relativeVolume = avgVolume ? volumes[i] / avgVolume : 0;
+  const closedOutside = type === 'buy' ? close > upperNow : close < lowerNow;
+  const priorInside = previousClose <= upper.at(i - 1) + 0.12 * atr[i] && previousClose >= lower.at(i - 1) - 0.12 * atr[i];
+  const confirmed = marketSession(quotes[i].date) === 'open' && closedOutside && priorInside && breakoutDistance >= WEDGE_CFG.breakoutAtr * atr[i] && body >= 0.2 * atr[i];
+  const wrongWay = type === 'buy' ? close < lowerNow - 0.12 * atr[i] : close > upperNow + 0.12 * atr[i];
+  const boundaryDistance = type === 'buy' ? upperNow - close : close - lowerNow;
+  const ready = !confirmed && boundaryDistance >= -0.06 * atr[i] && boundaryDistance <= 0.35 * atr[i];
+  const status = confirmed ? 'TRIGGERED' : wrongWay ? 'INVALIDATED' : ready ? 'READY' : 'FORMING';
+  const setupId = `${symbol}-${timeframe}-${pattern}-${quotes[startIndex].date.getTime()}`;
+  const signalTimestamp = quotes[i].date.getTime() + (timeframe === '5m' ? 5 : 15) * 60000;
+  const previous = previousById.get(setupId);
+  if (previous?.entry) return previous;
+
+  const vwap = sessionVWAP(quotes, i);
+  const vwapAligned = type === 'buy' ? close > vwap : close < vwap;
+  const emaAligned = type === 'buy'
+    ? ema9[i] > ema20[i] && ema20[i] > ema50[i]
+    : ema9[i] < ema20[i] && ema20[i] < ema50[i];
+  const latestPivot = type === 'buy' ? recentLows.at(-1).price : recentHighs.at(-1).price;
+  const stopCandidate = type === 'buy' ? latestPivot - WEDGE_CFG.stopAtrBuffer * atr[i] : latestPivot + WEDGE_CFG.stopAtrBuffer * atr[i];
+  const risk = Math.abs(close - stopCandidate);
+  const riskAtr = risk / atr[i];
+  const validStop = type === 'buy' ? stopCandidate < close - 0.1 * atr[i] : stopCandidate > close + 0.1 * atr[i];
+  const actionable = confirmed && validStop && riskAtr <= 1.5 && riskAtr >= 0.25;
+  const patternPoints = Math.round(Math.min(25, 13 + 6 * ((upper.r2 + lower.r2) / 2) + 8 * Math.min(1, convergence / 0.5)));
+  const breakoutPoints = confirmed ? Math.round(Math.min(20, 7 + 7 * breakoutDistance / atr[i] + 6 * body / atr[i])) : ready ? 6 : 2;
+  const volumePoints = Math.round(Math.min(15, 5 * relativeVolume));
+  const alignmentPoints = (vwapAligned ? 7 : 0) + (emaAligned ? 8 : 0);
+  const roomPoints = riskAtr >= 0.3 && riskAtr <= 1.25 ? 10 : riskAtr <= 1.5 ? 5 : 0;
+  const freshnessPoints = 5; // Signal quality is immutable; recency is a separate UI filter.
+  const scoreParts = { pattern: patternPoints, breakout: breakoutPoints, volume: volumePoints, alignment: alignmentPoints, market: 0, room: roomPoints, freshness: freshnessPoints };
+  const baseScore = Object.values(scoreParts).reduce((sum, value) => sum + value, 0);
+  const dir = type === 'buy' ? 1 : -1;
+  const entry = actionable ? +close.toFixed(2) : null;
+  const stop = actionable ? +stopCandidate.toFixed(2) : null;
+  const frozenRisk = actionable ? Math.abs(entry - stop) : null;
+  return {
+    setupId, symbol, timeframe, pattern, type, status: confirmed && !actionable ? 'INVALIDATED' : status,
+    patternName: pattern === 'rising_wedge' ? 'وتد صاعد · PUT' : 'وتد هابط · CALL',
+    signalTimestamp, timestamp: signalTimestamp, candleTimestamp: quotes[i].date.getTime(),
+    alertedAt: previous?.alertedAt || scanStartedAt, date: fmtDate(signalTimestamp),
+    session: marketSession(quotes[i].date), latestPrice: +quotes.at(-1).close.toFixed(2), latestPriceAt: quotes.at(-1).date.getTime(),
+    triggerPrice: +(type === 'buy' ? upperNow : lowerNow).toFixed(2), entry, stop,
+    risk: frozenRisk == null ? null : +frozenRisk.toFixed(2),
+    t1: actionable ? +(entry + dir * frozenRisk).toFixed(2) : null,
+    t2: actionable ? +(entry + dir * 2 * frozenRisk).toFixed(2) : null,
+    t3: actionable ? +(entry + dir * 3 * frozenRisk).toFixed(2) : null,
+    rr: actionable ? 3 : null, atr: +atr[i].toFixed(2), riskAtr: +riskAtr.toFixed(2),
+    relativeVolume: +relativeVolume.toFixed(2), vwap: +vwap.toFixed(2), vwapAligned, emaAligned,
+    ema9: +ema9[i].toFixed(2), ema20: +ema20[i].toFixed(2), ema50: +ema50[i].toFixed(2),
+    convergence: +(convergence * 100).toFixed(1), breakoutAtr: +(Math.max(0, breakoutDistance) / atr[i]).toFixed(2),
+    upperLine: { start: +upper.at(startIndex).toFixed(2), end: +upperNow.toFixed(2) },
+    lowerLine: { start: +lower.at(startIndex).toFixed(2), end: +lowerNow.toFixed(2) },
+    chart: { closes: closes.slice(startIndex, i + 1).map(value => +value.toFixed(2)) },
+    scoreParts, baseScore, score: baseScore, grade: wedgeGrade(baseScore),
+    eventType: confirmed ? actionable ? 'wedge_triggered' : 'wedge_invalidated' : wrongWay ? 'wedge_invalidated' : ready ? 'wedge_ready' : 'wedge_forming',
+    finalResult: null,
+  };
+}
+
+function wedgeTransitionEvents(previous, updated) {
+  const event = (type, timestamp) => ({ type: `wedge_${type}`, setupId: updated.setupId, symbol: updated.symbol,
+    timeframe: updated.timeframe, status: updated.status, timestamp,
+    historical: Date.now() - timestamp > (updated.timeframe === '5m' ? 10 : 20) * 60000 });
+  const out = [];
+  if (!previous && ['FORMING', 'READY', 'TRIGGERED', 'INVALIDATED'].includes(updated.entry ? 'TRIGGERED' : updated.status))
+    out.push(event(updated.entry ? 'triggered' : updated.status.toLowerCase(), updated.signalTimestamp));
+  else if (previous && !previous.entry && updated.entry) out.push(event('triggered', updated.signalTimestamp));
+  else if (previous && !previous.entry && previous.status !== updated.status) out.push(event(updated.status.toLowerCase(), updated.signalTimestamp));
+  for (const key of ['t1', 't2', 't3', 'stopped']) {
+    if (updated.hits?.[key] && !previous?.hits?.[key]) out.push(event(key === 'stopped' ? 'stopped' : `${key}_hit`, updated.hits[key]));
+  }
+  return out;
+}
+
+async function scanWedges(previousSignals = [], scanStartedAt = new Date().toISOString()) {
+  const signals = [], errors = [], events = [];
+  const previousById = new Map(previousSignals.map(signal => [signal.setupId, signal]));
+  for (const symbol of SYMBOLS) {
+    for (const timeframe of ['5m', '15m']) {
+      try {
+        const quotes = await fetchYahoo(symbol, timeframe, '5d', true);
+        if (quotes.length < 70) { errors.push(`${symbol}-${timeframe}`); continue; }
+        const highs = quotes.map(q => q.high), lows = quotes.map(q => q.low), closes = quotes.map(q => q.close), volumes = quotes.map(q => q.volume);
+        const atr = calcATR(highs, lows, closes, 14), ema9 = calcEMA(closes, 9), ema20 = calcEMA(closes, 20), ema50 = calcEMA(closes, 50);
+        const minutes = timeframe === '5m' ? 5 : 15;
+        let lastClosed = quotes.length - 1;
+        while (lastClosed >= 0 && quotes[lastClosed].date.getTime() + minutes * 60000 > Date.now()) lastClosed--;
+        if (lastClosed < 65) continue;
+        const arrays = { highs, lows, closes, volumes, atr, ema9, ema20, ema50 };
+        const detected = [];
+        for (let i = Math.max(60, lastClosed - 5); i <= lastClosed; i++) {
+          const setup = detectWedgeAt(symbol, timeframe, quotes, i, arrays, previousById, scanStartedAt);
+          if (setup && (i === lastClosed || setup.entry)) detected.push(setup);
+        }
+        const byId = new Map();
+        for (const setup of detected) {
+          const current = byId.get(setup.setupId);
+          if (!current || (!current.entry && (setup.entry || setup.signalTimestamp > current.signalTimestamp))) byId.set(setup.setupId, setup);
+        }
+        for (const setup of byId.values()) {
+          if (setup.entry && !previousById.has(setup.setupId) && previousSignals.some(signal =>
+            signal.symbol === symbol && signal.timeframe === timeframe && signal.pattern === setup.pattern && signal.entry &&
+            Math.abs(signal.signalTimestamp - setup.signalTimestamp) < 45 * 60000)) continue;
+          const updated = updateWedgeLifecycle(setup, quotes, lastClosed);
+          updated.latestPrice = +quotes[lastClosed].close.toFixed(2);
+          updated.latestPriceAt = quotes[lastClosed].date.getTime();
+          signals.push(updated);
+          const previous = previousById.get(updated.setupId);
+          events.push(...wedgeTransitionEvents(previous, updated));
+        }
+        for (const previous of previousSignals.filter(signal => signal.symbol === symbol && signal.timeframe === timeframe && signal.entry && Date.now() - signal.signalTimestamp < 12 * 60 * 60 * 1000)) {
+          if (byId.has(previous.setupId)) continue;
+          const updated = updateWedgeLifecycle(previous, quotes, lastClosed);
+          updated.latestPrice = +quotes[lastClosed].close.toFixed(2);
+          updated.latestPriceAt = quotes[lastClosed].date.getTime();
+          signals.push(updated);
+          events.push(...wedgeTransitionEvents(previous, updated));
+        }
+      } catch (error) { errors.push(`${symbol}-${timeframe}: ${error.message}`); }
+    }
+  }
+  const unique = [...new Map(signals.map(signal => [signal.setupId, signal])).values()]
+    .filter(signal => Date.now() - signal.signalTimestamp < 12 * 60 * 60 * 1000)
+    .sort((a, b) => b.signalTimestamp - a.signalTimestamp);
+  return { signals: unique, events: events.slice(-100), errorCount: errors.length };
+}
+
+// ════════════════════════════════════════════════════════════════
 // MARKET OVERVIEW: broad US index ETFs + volatility
 // ════════════════════════════════════════════════════════════════
 async function scanMarket() {
@@ -714,19 +992,39 @@ async function scanCalendar() {
 module.exports = async (req, res) => {
   res.setHeader("Cache-Control", "no-store");
   try {
+    yahooRequestCache.clear();
     const now = new Date().toISOString();
     const previous = await kvGet("wt_signals");
+    const historyValue = await kvGet("wt_wedge_history").catch(() => null);
+    const previousHistory = Array.isArray(historyValue) ? historyValue : [];
 
-    const [tf15m, tf1h, tf4h, breakout, intraday, market, calendar] = await Promise.all([
+    const [tf15m, tf1h, tf4h, breakout, intraday, wedgesRaw, market, calendar] = await Promise.all([
       scanWT("15m", "5d",  1),
       scanWT("1h",  "14d", 2),
       scanWT("4h",  "60d", 7),
       scanBreakout(previous?.breakout?.signals || [], now),
       scanIntraday(previous?.intraday?.signals || [], now),
+      scanWedges(previous?.wedges?.signals || [], now),
       scanMarket(),
       scanCalendar(),
     ]);
 
+    const wedges = applyWedgeMarketBias(wedgesRaw, { ...market, watchlistBreadth: intraday.breadth });
+    const historyById = new Map(previousHistory.map(item => [item.setupId, item]));
+    for (const signal of wedges.signals) {
+      if (!signal.entry) continue;
+      historyById.set(signal.setupId, {
+        setupId: signal.setupId, symbol: signal.symbol, timeframe: signal.timeframe,
+        pattern: signal.pattern, type: signal.type, signalTimestamp: signal.signalTimestamp,
+        entry: signal.entry, stop: signal.stop, t1: signal.t1, t2: signal.t2, t3: signal.t3,
+        score: signal.score, grade: signal.grade, scoreParts: signal.scoreParts,
+        relativeVolume: signal.relativeVolume, vwap: signal.vwap, vwapAligned: signal.vwapAligned,
+        ema9: signal.ema9, ema20: signal.ema20, ema50: signal.ema50,
+        marketBias: signal.marketBias, status: signal.status, hits: signal.hits || {},
+        finalResult: signal.finalResult,
+      });
+    }
+    const wedgeHistory = [...historyById.values()].sort((a, b) => b.signalTimestamp - a.signalTimestamp).slice(0, 300);
     const result = {
       wt: {
         "15m": { signals: tf15m.signals, errorCount: tf15m.errorCount },
@@ -735,17 +1033,19 @@ module.exports = async (req, res) => {
       },
       breakout: { signals: breakout.signals, errorCount: breakout.errorCount },
       intraday: { signals: intraday.signals, errorCount: intraday.errorCount },
+      wedges: { signals: wedges.signals, events: [...(previous?.wedges?.events || []), ...wedges.events].slice(-200), errorCount: wedges.errorCount },
       market: { ...market, watchlistBreadth: intraday.breadth, calendar },
       updatedAt:   now,
       symbolCount: SYMBOLS.length,
       health: {
-        failedSymbols: { intraday: intraday.errorCount, breakout: breakout.errorCount,
+        failedSymbols: { intraday: intraday.errorCount, breakout: breakout.errorCount, wedges: wedges.errorCount,
           market: market.errorCount, wt15m: tf15m.errorCount, wt1h: tf1h.errorCount, wt4h: tf4h.errorCount },
         intradayLatestCandleAt: intraday.breadth.latestCandleAt,
       },
     };
 
     await kvSet("wt_signals", result);
+    await kvSet("wt_wedge_history", wedgeHistory).catch(() => false);
 
     res.status(200).json({
       ok: true,
@@ -759,6 +1059,7 @@ module.exports = async (req, res) => {
       intraday: intraday.signals.length,
       intraday_breakout: intraday.signals.filter(s => s.mode === "breakout").length,
       intraday_reversal: intraday.signals.filter(s => s.mode === "reversal").length,
+      wedges: wedges.signals.length,
       market_score: market.score,
       market_mood: market.mood,
       calendar_events: calendar.events.length,

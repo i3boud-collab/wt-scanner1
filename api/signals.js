@@ -18,6 +18,8 @@ module.exports = async (req, res) => {
     if (!data) return res.status(200).json({
       wt: { "15m":{signals:[]}, "1h":{signals:[]}, "4h":{signals:[]} },
       breakout: { signals:[] },
+      intraday: { signals:[] },
+      wedges: { signals:[], events:[] },
       updatedAt: null, symbolCount: 0, status: "initializing",
     });
     res.status(200).json({ ...data, status: "ok" });
