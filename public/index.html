@@ -248,6 +248,12 @@ body{background:#080f1c;background-image:radial-gradient(ellipse 60% 30% at 75% 
 @media(max-width:700px){.tape-row{flex-wrap:wrap}.tape-bias{width:100%;flex:auto;border-bottom:1px solid #29405d}.tape-metric{flex:1;min-width:0;padding:9px 5px}.tape-metric:first-of-type{border-inline-start:0}.tape-value{font-size:12px}}
 .wedge-card{border:1px solid #2b4662;border-radius:15px;background:linear-gradient(145deg,#13263b,#0d1b2f);overflow:hidden;box-shadow:0 10px 24px rgba(0,0,0,.12)}.wedge-card.buy{box-shadow:inset 3px 0 0 var(--buy)}.wedge-card.sell{box-shadow:inset 3px 0 0 var(--sell)}.wedge-card.weak{opacity:.74}.wedge-head{display:flex;justify-content:space-between;gap:10px;padding:16px}.wedge-title{font:800 23px var(--mono)}.wedge-sub{color:#9eb2ce;font-size:12px;margin-top:4px}.wedge-grade{font:800 18px var(--mono);color:var(--blue);text-align:left}.wedge-status{padding:8px 16px;border-top:1px solid #273c57;background:#0c1a2d;color:#aac0dc;font-size:12px}.wedge-status.triggered{color:var(--buy)}.wedge-status.warn{color:var(--orange)}.wedge-levels{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #243853}.wedge-level{padding:12px 8px;border-inline-start:1px solid #243853;text-align:center;direction:ltr}.wedge-level:nth-child(3n+1){border-inline-start:0}.wedge-level strong{display:block;font:700 15px var(--mono)}.wedge-level small{display:block;color:#849bb6;font-size:10px;margin-top:4px}.wedge-level.stop strong{color:var(--sell)}.wedge-level.target strong{color:var(--buy)}.wedge-meta{padding:12px 15px;display:flex;gap:6px;flex-wrap:wrap;border-top:1px solid #243853}.wedge-meta span{border:1px solid #294460;border-radius:5px;padding:4px 7px;color:#a8bcda;font-size:10px}.wedge-note{color:#8398b4;font-size:11px;line-height:1.5;padding:0 15px 13px}.wedge-intro{grid-column:1/-1;border:1px solid #294668;border-radius:12px;padding:14px 16px;background:#112137;color:#adc2dd;line-height:1.6;font-size:12px}.wedge-intro strong{color:#e9f3ff}
 .wedge-chart{border-top:1px solid #243853;padding:10px 13px}.wedge-chart svg{display:block;width:100%;height:155px}.wedge-chart figcaption{font-size:10px;color:#8398b4;margin-top:3px}.wedge-chart text{font:9px var(--mono);fill:#91a7c6}
+.s-ledger .strat-icon{color:var(--blue);background:#142435}.strat-tab.s-ledger.active::after{background:var(--blue)}
+.ledger-intro,.ledger-summary,.ledger-card{grid-column:1/-1;border:1px solid #28405a;border-radius:13px;background:#101e30;padding:16px;color:#b5c8df;line-height:1.6}
+.ledger-intro strong{color:#eef5ff}.ledger-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px}.ledger-summary div{padding:10px;background:#162940;border-radius:8px}.ledger-summary strong{display:block;color:#eef5ff;font:700 20px var(--mono)}.ledger-summary small{color:#a4b9d2}
+.ledger-card{padding:0;overflow:hidden;grid-column:auto}.ledger-top{display:flex;justify-content:space-between;gap:8px;padding:15px;border-bottom:1px solid #28405a}.ledger-top strong{font:800 20px var(--mono);color:#fff}.ledger-top small{display:block;color:#91aac6}.ledger-state{font-weight:700;color:var(--blue)}.ledger-card.stopped .ledger-state{color:var(--sell)}.ledger-card.hit .ledger-state{color:var(--buy)}
+.ledger-levels{display:grid;grid-template-columns:repeat(3,1fr)}.ledger-levels span{border-bottom:1px solid #233953;border-inline-start:1px solid #233953;padding:10px 5px;text-align:center;font:700 13px var(--mono);direction:ltr}.ledger-levels small{display:block;color:#91a9c3;font:400 10px var(--sans)}.ledger-levels .met{color:var(--buy)}.ledger-foot{padding:12px 15px;font-size:11px;color:#9db4ce}.ledger-more{grid-column:1/-1;background:#172b43;border:1px solid #365477;border-radius:8px;padding:11px;cursor:pointer}
+@media(max-width:620px){.ledger-summary{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -312,6 +318,10 @@ body{background:#080f1c;background-image:radial-gradient(ellipse 60% 30% at 75% 
   <div class="strat-tab s-mkt" id="stab-mkt" onclick="setStrat('mkt')">
     <span class="strat-icon">MKT</span>
     <span><span class="strat-name">السوق</span><span class="strat-desc">Indices · VIX · Breadth</span></span>
+  </div>
+  <div class="strat-tab s-ledger" id="stab-ledger" onclick="setStrat('ledger')">
+    <span class="strat-icon">LOG</span>
+    <span><span class="strat-name">سجل الإشارات</span><span class="strat-desc">Plans · Outcomes</span></span>
   </div>
 </div>
 
@@ -410,6 +420,16 @@ body{background:#080f1c;background-image:radial-gradient(ellipse 60% 30% at 75% 
 </div>
 
 <!-- ══ MARKET OVERVIEW SECTION ══ -->
+<div class="tf-wrap" id="wrap-ledger">
+  <div class="filters" id="filters-ledger">
+    <button class="f on" onclick="setLedgerFilter(this,'all')">الكل</button>
+    <button class="f" onclick="setLedgerFilter(this,'intraday')">اللحظي</button>
+    <button class="f" onclick="setLedgerFilter(this,'breakout')">الاختراق</button>
+    <button class="f" onclick="setLedgerFilter(this,'wedge')">النماذج الفنية</button>
+    <button class="f" onclick="setLedgerFilter(this,'active')">قيد المتابعة</button>
+    <button class="f" onclick="setLedgerFilter(this,'completed')">مكتملة</button>
+  </div>
+</div>
 <div class="tf-wrap" id="wrap-mkt">
   <div class="stats">
     <div class="sc y"><div class="sn" id="mkt-mood">—</div><div class="sl">وضع السوق</div></div>
@@ -458,13 +478,15 @@ let data = {
   wedges: { signals:[], events:[] },
   market: { items:[], score:50, mood:'neutral', breadth:0, breadthTotal:4, vixChange:null, session:'closed' }
 };
-let strat   = 'wt';   // 'wt' | 'bo' | 'id' | 'wedge' | 'mkt'
+let strat   = 'wt';   // 'wt' | 'bo' | 'id' | 'wedge' | 'mkt' | 'ledger'
 let curTF   = '1h';
 let wtFilt  = 'all';
 let boFilt  = 'all';
 let idFilt  = 'all';
 let wedgeFilt = 'all';
 let mktView = 'overview';
+let ledger = {records:[],updatedAt:null,error:null};
+let ledgerFilter = 'all', ledgerLimit = 50;
 let srch    = '';
 const REFRESH = 5 * 60 * 1000;
 let scanInProgress = false;
@@ -500,14 +522,17 @@ function setStrat(s) {
   document.getElementById('stab-id').classList.toggle('active', s==='id');
   document.getElementById('stab-wedge').classList.toggle('active', s==='wedge');
   document.getElementById('stab-mkt').classList.toggle('active', s==='mkt');
+  document.getElementById('stab-ledger').classList.toggle('active', s==='ledger');
   document.getElementById('wrap-wt').classList.toggle('active', s==='wt');
   document.getElementById('wrap-bo').classList.toggle('active', s==='bo');
   document.getElementById('wrap-id').classList.toggle('active', s==='id');
   document.getElementById('wrap-wedge').classList.toggle('active', s==='wedge');
   document.getElementById('wrap-mkt').classList.toggle('active', s==='mkt');
+  document.getElementById('wrap-ledger').classList.toggle('active', s==='ledger');
   document.getElementById('resultsTitle').textContent = s==='mkt'
     ? ({overview:'وضع السوق العام',pre:'قراءة قبل الافتتاح',sectors:'قيادة القطاعات',calendar:'تقويم اليوم'}[mktView] || 'وضع السوق العام')
-    : 'الإشارات المكتشفة';
+    : s==='ledger' ? 'سجل الإشارات وأداؤها' : 'الإشارات المكتشفة';
+  if(s==='ledger') fetchLedger();
   renderCards();
 }
 
@@ -565,6 +590,16 @@ async function fetchData() {
   }
 }
 
+async function fetchLedger() {
+  try {
+    const res=await fetch('/api/performance-ledger',{cache:'no-store'});
+    if(!res.ok) throw new Error('unavailable');
+    const value=await res.json();
+    ledger={records:Array.isArray(value.records)?value.records:[],updatedAt:value.updatedAt,error:null};
+  } catch { ledger.error='تعذر تحميل السجل الآن. حاول التحديث لاحقًا.'; }
+  if(strat==='ledger') renderCards();
+}
+
 function isMarketScanWindow() {
   const ny = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
   const mins = ny.getHours()*60+ny.getMinutes(), day=ny.getDay();
@@ -591,6 +626,7 @@ async function runLiveScan() {
 async function refreshLive(forceScan=false) {
   if(forceScan || isMarketScanWindow()) await runLiveScan();
   await fetchData();
+  if(strat==='ledger') await fetchLedger();
 }
 
 function manualRefresh() {
@@ -763,6 +799,11 @@ function setMktView(btn, view) {
 }
 
 function onSrch(v) { srch=v.trim(); renderCards(); }
+function setLedgerFilter(button,filter) {
+  ledgerFilter=filter; ledgerLimit=50;
+  document.querySelectorAll('#filters-ledger .f').forEach(el=>el.classList.toggle('on',el===button));
+  renderCards();
+}
 function fmtV(v) { if(!v) return '—'; if(v>=1e6) return (v/1e6).toFixed(1)+'M'; if(v>=1e3) return (v/1e3).toFixed(0)+'K'; return v; }
 
 // ═══════════════════════════════════════════════════════════════
@@ -776,7 +817,35 @@ function renderCards() {
   else if (strat === 'bo') renderBO();
   else if (strat === 'id') renderIntraday();
   else if (strat === 'wedge') renderWedges();
+  else if (strat === 'ledger') renderLedger();
   else renderMarket();
+}
+
+function ledgerDate(value) {
+  if(!Number.isFinite(Number(value))) return '—';
+  return new Date(Number(value)).toLocaleString('ar-SA',{timeZone:'America/New_York',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function ledgerMoney(value) { return value!==null&&value!==undefined&&Number.isFinite(Number(value)) ? '$'+Number(value).toFixed(2) : '—'; }
+function renderLedger() {
+  const wrap=document.getElementById('cards');
+  const records=ledger.records;
+  const active=r=>['TRACKING','T1_HIT','T2_HIT'].includes(r.status);
+  const completed=r=>['T3_HIT','STOPPED','SESSION_ENDED','NO_COVERAGE'].includes(r.status);
+  const intro='<div class="ledger-intro"><strong>خطط رصدها الموقع، وليست صفقات منفذة.</strong> يبدأ تتبع الشموع بعد رصد الإشارة، لذلك لا تُحتسب حركة سابقة. الأسعار والأهداف للسهم الأساسي بالدولار وليست سعر عقد الأوبشن أو ربحه. عند لمس الوقف والهدف في شمعة واحدة نحتسب الوقف أولًا. السجل يبدأ من تفعيل هذه النسخة، ويحتفظ بآخر 120 يومًا أو 1800 إشارة.</div>';
+  if(ledger.error){wrap.innerHTML=intro+'<div class="ledger-intro">'+ledger.error+'</div>';return;}
+  const stats=`<div class="ledger-summary"><div><strong>${records.length}</strong><small>إشارة مسجلة</small></div><div><strong>${records.filter(active).length}</strong><small>قيد المتابعة</small></div><div><strong>${records.filter(r=>r.t1HitAt).length}</strong><small>لامست T1</small></div><div><strong>${records.filter(r=>r.status==='STOPPED'&&!r.t1HitAt).length}</strong><small>وقف قبل T1</small></div></div>`;
+  if(!records.length){wrap.innerHTML=intro+stats+'<div class="ledger-intro">لا توجد إشارات مسجلة بعد. يبدأ السجل بإشارات جديدة أثناء جلسة السوق بعد أول مسح ناجح.</div>';return;}
+  let shown=records.filter(r=>ledgerFilter==='all'||(ledgerFilter==='active'?active(r):ledgerFilter==='completed'?completed(r):r.strategy===ledgerFilter));
+  if(srch) shown=shown.filter(r=>String(r.symbol).toUpperCase().includes(srch.toUpperCase()));
+  const names={intraday:'لحظي',breakout:'اختراق',wedge:'نموذج فني'};
+  const statuses={TRACKING:'قيد المتابعة',T1_HIT:'تحقق T1 · مستمرة',T2_HIT:'تحقق T2 · مستمرة',T3_HIT:'تحقق T3',STOPPED:'لمس الوقف',SESSION_ENDED:'انتهت الجلسة',NO_COVERAGE:'بيانات غير كافية'};
+  const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  wrap.innerHTML=intro+stats+(shown.length?shown.slice(0,ledgerLimit).map(r=>{
+    const hit=r.status==='T3_HIT'||r.t1HitAt;
+    const levels=[['Entry',r.entry],['Stop',r.stop],['T1',r.t1,r.t1HitAt],['T2',r.t2,r.t2HitAt],['T3',r.t3,r.t3HitAt]];
+    const move=Number.isFinite(Number(r.outcomeR))&&r.outcomeR!==null?` · نهاية الخطة ${Number(r.outcomeR).toFixed(2)}R`:'';
+    return `<article class="ledger-card ${r.status==='STOPPED'?'stopped':hit?'hit':''}"><div class="ledger-top"><div><strong>${esc(r.symbol)}</strong><small>${esc(names[r.strategy]||r.strategy)} · ${esc(r.mode)} · ${esc(r.timeframe)} · ${r.direction==='buy'?'CALL ↑':'PUT ↓'}</small><small>الإشارة ${ledgerDate(r.signalAt)} · بدء المتابعة ${ledgerDate(r.trackingFrom)} بتوقيت نيويورك</small></div><span class="ledger-state">${esc(statuses[r.status]||r.status)}</span></div><div class="ledger-levels">${levels.map(([label,price,at])=>`<span class="${at?'met':''}">${ledgerMoney(price)}<small>${label}${at?' ✓':''}</small></span>`).join('')}<span>${ledgerMoney(r.latestPrice)}<small>آخر إغلاق مرصود</small></span></div><div class="ledger-foot">${r.t1HitAt?'T1: '+ledgerDate(r.t1HitAt)+' · ':''}${r.t2HitAt?'T2: '+ledgerDate(r.t2HitAt)+' · ':''}${r.t3HitAt?'T3: '+ledgerDate(r.t3HitAt)+' · ':''}${r.stoppedAt?'وقف: '+ledgerDate(r.stoppedAt)+' · ':''}${r.evaluatedBars||0} شموع مكتملة${move}${r.status==='NO_COVERAGE'?' · لا يُحسب أداء لهذه الإشارة بسبب نقص التغطية':''}</div></article>`;
+  }).join('')+(shown.length>ledgerLimit?`<button class="ledger-more" onclick="ledgerLimit+=50;renderCards()">عرض المزيد (${shown.length-ledgerLimit})</button>`:''):'<div class="ledger-intro">لا توجد نتائج لهذا الفلتر.</div>');
 }
 
 let calendarWidgetLoaded=false;
