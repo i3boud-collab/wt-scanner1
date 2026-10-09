@@ -1,17 +1,21 @@
 // api/scan.js — WaveTrend + Breakout multi-strategy scanner
 const { calcWT, calcRSI, volAvg } = require("./indicators");
 const { SYMBOLS, CONFIG }         = require("./config");
+const { captureNewSignals, advanceRecord, keepRecent } = require("./performance-engine");
 
 // ── KV helper ──────────────────────────────────────────────────
 async function kvSet(key, value) {
   const url   = process.env.KV_REST_API_URL;
   const token = process.env.KV_REST_API_TOKEN;
   if (!url || !token) return false;
-  await fetch(`${url}/pipeline`, {
+  const response = await fetch(`${url}/pipeline`, {
     method: "POST",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
     body: JSON.stringify([["SET", key, JSON.stringify(value)]]),
   });
+  if (!response.ok) throw new Error(`KV write failed (${response.status})`);
+  const written = await response.json();
+  if (!Array.isArray(written) || written.some(item => item.error)) throw new Error('KV rejected write');
   return true;
 }
 
@@ -22,7 +26,7 @@ async function kvGet(key) {
   const res = await fetch(`${url}/get/${key}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) return null;
+  if (!res.ok) throw new Error(`KV read failed (${res.status})`);
   const json = await res.json();
   if (!json.result) return null;
   try { return JSON.parse(json.result); } catch { return null; }
@@ -996,6 +1000,8 @@ module.exports = async (req, res) => {
     const now = new Date().toISOString();
     const previous = await kvGet("wt_signals");
     const historyValue = await kvGet("wt_wedge_history").catch(() => null);
+    const ledgerValue = await kvGet("wt_signal_ledger");
+    const previousLedger = Array.isArray(ledgerValue?.records) ? ledgerValue.records : [];
     const previousHistory = Array.isArray(historyValue) ? historyValue : [];
 
     const [tf15m, tf1h, tf4h, breakout, intraday, wedgesRaw, market, calendar] = await Promise.all([
@@ -1010,6 +1016,16 @@ module.exports = async (req, res) => {
     ]);
 
     const wedges = applyWedgeMarketBias(wedgesRaw, { ...market, watchlistBreadth: intraday.breadth });
+    const observedAt = Date.now();
+    const pendingLedger = captureNewSignals(previousLedger, { intraday, breakout, wedges }, observedAt,
+      market.session === "open" && marketSession(new Date()) === "open");
+    const activeSymbols = [...new Set(pendingLedger.filter(r => ["TRACKING", "T1_HIT", "T2_HIT"].includes(r.status)).map(r => r.symbol))];
+    const quotePairs = await Promise.all(activeSymbols.map(async symbol => {
+      try { return [symbol, await fetchYahoo(symbol, "5m", "5d", true)]; }
+      catch { return [symbol, []]; }
+    }));
+    const ledgerQuotes = new Map(quotePairs);
+    const ledger = keepRecent(pendingLedger.map(r => advanceRecord(r, ledgerQuotes.get(r.symbol) || [], Date.now())), Date.now());
     const historyById = new Map(previousHistory.map(item => [item.setupId, item]));
     for (const signal of wedges.signals) {
       if (!signal.entry) continue;
@@ -1046,6 +1062,7 @@ module.exports = async (req, res) => {
 
     await kvSet("wt_signals", result);
     await kvSet("wt_wedge_history", wedgeHistory).catch(() => false);
+    const ledgerSaved = await kvSet("wt_signal_ledger", { records: ledger, updatedAt: now }).catch(() => false);
 
     res.status(200).json({
       ok: true,
@@ -1060,6 +1077,8 @@ module.exports = async (req, res) => {
       intraday_breakout: intraday.signals.filter(s => s.mode === "breakout").length,
       intraday_reversal: intraday.signals.filter(s => s.mode === "reversal").length,
       wedges: wedges.signals.length,
+      ledger: ledger.length,
+      ledgerSaved,
       market_score: market.score,
       market_mood: market.mood,
       calendar_events: calendar.events.length,
