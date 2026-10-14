@@ -822,8 +822,8 @@ function renderCards() {
 }
 
 function ledgerDate(value) {
-  if(!Number.isFinite(Number(value))) return '—';
-  return new Date(Number(value)).toLocaleString('ar-SA',{timeZone:'America/New_York',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  if(value===null||value===undefined||!Number.isFinite(Number(value))) return '—';
+  return new Date(Number(value)).toLocaleString('en-GB-u-ca-gregory-nu-latn',{timeZone:'Asia/Riyadh',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'});
 }
 function ledgerMoney(value) { return value!==null&&value!==undefined&&Number.isFinite(Number(value)) ? '$'+Number(value).toFixed(2) : '—'; }
 function renderLedger() {
@@ -831,12 +831,15 @@ function renderLedger() {
   const records=ledger.records;
   const active=r=>['TRACKING','T1_HIT','T2_HIT'].includes(r.status);
   const completed=r=>['T3_HIT','STOPPED','SESSION_ENDED','NO_COVERAGE'].includes(r.status);
-  const intro='<div class="ledger-intro"><strong>خطط رصدها الموقع، وليست صفقات منفذة.</strong> يبدأ تتبع الشموع بعد رصد الإشارة، لذلك لا تُحتسب حركة سابقة. الأسعار والأهداف للسهم الأساسي بالدولار وليست سعر عقد الأوبشن أو ربحه. عند لمس الوقف والهدف في شمعة واحدة نحتسب الوقف أولًا. السجل يبدأ من تفعيل هذه النسخة، ويحتفظ بآخر 120 يومًا أو 1800 إشارة.</div>';
+  const intro='<div class="ledger-intro"><strong>خطط رصدها الموقع، وليست صفقات منفذة.</strong> التواريخ ميلادية والأوقات بتوقيت السعودية. يبدأ تتبع الشموع بعد رصد الإشارة، لذلك لا تُحتسب حركة سابقة. نسبة نجاح T1 = الإشارات المكتملة التي لمست T1 ÷ جميع الإشارات المكتملة ببيانات كافية ضمن الفلتر؛ تُستبعد الإشارات قيد المتابعة وناقصة البيانات. الأسعار والأهداف للسهم الأساسي بالدولار وليست سعر عقد الأوبشن أو ربحه. عند لمس الوقف والهدف في شمعة واحدة نحتسب الوقف أولًا. يحتفظ السجل بآخر 120 يومًا أو 1800 إشارة.</div>';
   if(ledger.error){wrap.innerHTML=intro+'<div class="ledger-intro">'+ledger.error+'</div>';return;}
-  const stats=`<div class="ledger-summary"><div><strong>${records.length}</strong><small>إشارة مسجلة</small></div><div><strong>${records.filter(active).length}</strong><small>قيد المتابعة</small></div><div><strong>${records.filter(r=>r.t1HitAt).length}</strong><small>لامست T1</small></div><div><strong>${records.filter(r=>r.status==='STOPPED'&&!r.t1HitAt).length}</strong><small>وقف قبل T1</small></div></div>`;
-  if(!records.length){wrap.innerHTML=intro+stats+'<div class="ledger-intro">لا توجد إشارات مسجلة بعد. يبدأ السجل بإشارات جديدة أثناء جلسة السوق بعد أول مسح ناجح.</div>';return;}
   let shown=records.filter(r=>ledgerFilter==='all'||(ledgerFilter==='active'?active(r):ledgerFilter==='completed'?completed(r):r.strategy===ledgerFilter));
   if(srch) shown=shown.filter(r=>String(r.symbol).toUpperCase().includes(srch.toUpperCase()));
+  const evaluated=shown.filter(r=>completed(r)&&r.status!=='NO_COVERAGE');
+  const successful=evaluated.filter(r=>r.t1HitAt).length;
+  const successRate=evaluated.length?`${(100*successful/evaluated.length).toFixed(1)}%`:'—';
+  const stats=`<div class="ledger-summary"><div><strong>${shown.length}</strong><small>إشارة مسجلة</small></div><div><strong>${shown.filter(active).length}</strong><small>قيد المتابعة</small></div><div><strong>${shown.filter(r=>r.t1HitAt).length}</strong><small>لامست T1</small></div><div><strong>${shown.filter(r=>r.t2HitAt).length}</strong><small>لامست T2</small></div><div><strong>${shown.filter(r=>r.t3HitAt).length}</strong><small>لامست T3</small></div><div><strong>${shown.filter(r=>r.status==='STOPPED'&&!r.t1HitAt).length}</strong><small>وقف قبل T1</small></div><div><strong>${successRate}</strong><small>نجاح T1 · ${successful}/${evaluated.length} مكتملة</small></div></div>`;
+  if(!records.length){wrap.innerHTML=intro+stats+'<div class="ledger-intro">لا توجد إشارات مسجلة بعد. يبدأ السجل بإشارات جديدة أثناء جلسة السوق بعد أول مسح ناجح.</div>';return;}
   const names={intraday:'لحظي',breakout:'اختراق',wedge:'نموذج فني'};
   const statuses={TRACKING:'قيد المتابعة',T1_HIT:'تحقق T1 · مستمرة',T2_HIT:'تحقق T2 · مستمرة',T3_HIT:'تحقق T3',STOPPED:'لمس الوقف',SESSION_ENDED:'انتهت الجلسة',NO_COVERAGE:'بيانات غير كافية'};
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -844,7 +847,7 @@ function renderLedger() {
     const hit=r.status==='T3_HIT'||r.t1HitAt;
     const levels=[['Entry',r.entry],['Stop',r.stop],['T1',r.t1,r.t1HitAt],['T2',r.t2,r.t2HitAt],['T3',r.t3,r.t3HitAt]];
     const move=Number.isFinite(Number(r.outcomeR))&&r.outcomeR!==null?` · نهاية الخطة ${Number(r.outcomeR).toFixed(2)}R`:'';
-    return `<article class="ledger-card ${r.status==='STOPPED'?'stopped':hit?'hit':''}"><div class="ledger-top"><div><strong>${esc(r.symbol)}</strong><small>${esc(names[r.strategy]||r.strategy)} · ${esc(r.mode)} · ${esc(r.timeframe)} · ${r.direction==='buy'?'CALL ↑':'PUT ↓'}</small><small>الإشارة ${ledgerDate(r.signalAt)} · بدء المتابعة ${ledgerDate(r.trackingFrom)} بتوقيت نيويورك</small></div><span class="ledger-state">${esc(statuses[r.status]||r.status)}</span></div><div class="ledger-levels">${levels.map(([label,price,at])=>`<span class="${at?'met':''}">${ledgerMoney(price)}<small>${label}${at?' ✓':''}</small></span>`).join('')}<span>${ledgerMoney(r.latestPrice)}<small>آخر إغلاق مرصود</small></span></div><div class="ledger-foot">${r.t1HitAt?'T1: '+ledgerDate(r.t1HitAt)+' · ':''}${r.t2HitAt?'T2: '+ledgerDate(r.t2HitAt)+' · ':''}${r.t3HitAt?'T3: '+ledgerDate(r.t3HitAt)+' · ':''}${r.stoppedAt?'وقف: '+ledgerDate(r.stoppedAt)+' · ':''}${r.evaluatedBars||0} شموع مكتملة${move}${r.status==='NO_COVERAGE'?' · لا يُحسب أداء لهذه الإشارة بسبب نقص التغطية':''}</div></article>`;
+    return `<article class="ledger-card ${r.status==='STOPPED'?'stopped':hit?'hit':''}"><div class="ledger-top"><div><strong>${esc(r.symbol)}</strong><small>${esc(names[r.strategy]||r.strategy)} · ${esc(r.mode)} · ${esc(r.timeframe)} · ${r.direction==='buy'?'CALL ↑':'PUT ↓'}</small><small>الإشارة ${ledgerDate(r.signalAt)} · بدء المتابعة ${ledgerDate(r.trackingFrom)} بتوقيت السعودية</small></div><span class="ledger-state">${esc(statuses[r.status]||r.status)}</span></div><div class="ledger-levels">${levels.map(([label,price,at])=>`<span class="${at?'met':''}">${ledgerMoney(price)}<small>${label}${at?' ✓':''}</small></span>`).join('')}<span>${ledgerMoney(r.latestPrice)}<small>آخر إغلاق مرصود</small></span></div><div class="ledger-foot">${r.t1HitAt?'T1: '+ledgerDate(r.t1HitAt)+' · ':''}${r.t2HitAt?'T2: '+ledgerDate(r.t2HitAt)+' · ':''}${r.t3HitAt?'T3: '+ledgerDate(r.t3HitAt)+' · ':''}${r.stoppedAt?'وقف: '+ledgerDate(r.stoppedAt)+' · ':''}${r.evaluatedBars||0} شموع مكتملة${move}${r.status==='NO_COVERAGE'?' · لا يُحسب أداء لهذه الإشارة بسبب نقص التغطية':''}</div></article>`;
   }).join('')+(shown.length>ledgerLimit?`<button class="ledger-more" onclick="ledgerLimit+=50;renderCards()">عرض المزيد (${shown.length-ledgerLimit})</button>`:''):'<div class="ledger-intro">لا توجد نتائج لهذا الفلتر.</div>');
 }
 
