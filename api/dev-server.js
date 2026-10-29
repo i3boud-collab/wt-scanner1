@@ -4,6 +4,7 @@ const express = require("express");
 const path    = require("path");
 const scanFn  = require("./scan");
 const sigFn   = require("./signals");
+const muFn    = require("./mu-live");
 
 // محاكاة KV بـ in-memory
 let _store = {};
@@ -21,6 +22,7 @@ process.env.KV_REST_API_TOKEN = process.env.KV_REST_API_TOKEN || "MOCK";
 
 app.get("/api/scan",    (req, res) => scanFn(req, res));
 app.get("/api/signals", (req, res) => sigFn(req, res));
+app.get("/api/mu-live", (req, res) => muFn(req, res));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
