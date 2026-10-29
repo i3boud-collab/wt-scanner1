@@ -254,6 +254,12 @@ body{background:#080f1c;background-image:radial-gradient(ellipse 60% 30% at 75% 
 .ledger-card{padding:0;overflow:hidden;grid-column:auto}.ledger-top{display:flex;justify-content:space-between;gap:8px;padding:15px;border-bottom:1px solid #28405a}.ledger-top strong{font:800 20px var(--mono);color:#fff}.ledger-top small{display:block;color:#91aac6}.ledger-state{font-weight:700;color:var(--blue)}.ledger-card.stopped .ledger-state{color:var(--sell)}.ledger-card.hit .ledger-state{color:var(--buy)}
 .ledger-levels{display:grid;grid-template-columns:repeat(3,1fr)}.ledger-levels span{border-bottom:1px solid #233953;border-inline-start:1px solid #233953;padding:10px 5px;text-align:center;font:700 13px var(--mono);direction:ltr}.ledger-levels small{display:block;color:#91a9c3;font:400 10px var(--sans)}.ledger-levels .met{color:var(--buy)}.ledger-foot{padding:12px 15px;font-size:11px;color:#9db4ce}.ledger-more{grid-column:1/-1;background:#172b43;border:1px solid #365477;border-radius:8px;padding:11px;cursor:pointer}
 @media(max-width:620px){.ledger-summary{grid-template-columns:repeat(2,1fr)}}
+.s-mu .strat-icon{color:#ffb45e;background:#2b2015}.strat-tab.s-mu.active::after{background:#ff9d4d}
+.mu-strip{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;color:#9db1c9;font-size:12px}.mu-strip button{border:1px solid #35516e;background:#14283e;color:#eaf3ff;border-radius:7px;padding:7px 12px;cursor:pointer}.mu-live-grid{grid-column:1/-1;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}.mu-panel{border:1px solid #29445f;border-radius:14px;background:linear-gradient(145deg,#11243a,#0c1929);overflow:hidden;box-shadow:0 12px 30px rgba(0,0,0,.17)}.mu-hero{padding:18px}.mu-hero-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.mu-symbol{font:800 30px var(--mono);color:#fff}.mu-company{font-size:12px;color:#90a7c1}.mu-price{text-align:left;direction:ltr}.mu-price strong{display:block;font:800 30px var(--mono)}.mu-price span{font:700 13px var(--mono)}.mu-price .up{color:var(--buy)}.mu-price .down{color:var(--sell)}.mu-fresh{margin-top:12px;padding:8px 10px;border-radius:7px;background:#0c1929;color:#8fa5be;font-size:11px}.mu-fresh.warn{color:var(--gold);border:1px solid rgba(255,200,87,.25)}
+.mu-signal{margin-top:14px;border:1px solid #2a4562;border-radius:10px;padding:13px;background:#0d1c2e}.mu-signal-row{display:flex;align-items:center;justify-content:space-between;gap:10px}.mu-signal strong{font:800 18px var(--mono)}.mu-signal.call strong{color:var(--buy)}.mu-signal.put strong{color:var(--sell)}.mu-score{font:700 12px var(--mono);color:#9fb5cf}.mu-checks{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}.mu-check{border:1px solid #2c4865;border-radius:5px;padding:4px 7px;color:#8299b4;font-size:10px}.mu-check.ok{color:var(--buy);border-color:rgba(163,255,18,.32);background:rgba(163,255,18,.05)}
+.mu-chart{padding:14px;border-top:1px solid #29415a}.mu-chart svg{display:block;width:100%;height:190px}.mu-chart figcaption{color:#8199b4;font-size:10px;margin-top:5px}.mu-chart .grid{stroke:#203750;stroke-width:1}.mu-chart .line{fill:none;stroke:#62c7ff;stroke-width:2}.mu-chart .vwap{stroke:#ffc857;stroke-width:1.4;stroke-dasharray:5 4}.mu-chart text{fill:#849db8;font:9px var(--mono)}
+.mu-section-title{padding:13px 15px;border-bottom:1px solid #29415a;font-weight:700;color:#edf4fc}.mu-metrics{display:grid;grid-template-columns:repeat(3,1fr)}.mu-metric{padding:13px 8px;text-align:center;border-bottom:1px solid #243c56;border-inline-start:1px solid #243c56}.mu-metric:nth-child(3n+1){border-inline-start:0}.mu-metric strong{display:block;font:700 15px var(--mono);direction:ltr;color:#f2f6fb}.mu-metric small{display:block;color:#849bb5;font-size:10px;margin-top:4px}.mu-plan{grid-column:1/-1;border:1px solid #315170;border-radius:14px;background:#102238;overflow:hidden}.mu-plan-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px}.mu-plan-head strong{font:800 18px var(--mono)}.mu-plan.call{box-shadow:inset 3px 0 var(--buy)}.mu-plan.put{box-shadow:inset 3px 0 var(--sell)}.mu-plan-status{color:var(--blue);font-size:12px}.mu-plan-levels{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid #29435f}.mu-plan-levels div{text-align:center;padding:12px 6px;border-inline-start:1px solid #29435f}.mu-plan-levels div:first-child{border:0}.mu-plan-levels strong{display:block;font:700 14px var(--mono);direction:ltr}.mu-plan-levels small{color:#849bb5;font-size:10px}.mu-plan-levels .stop strong{color:var(--sell)}.mu-plan-levels .hit strong{color:var(--buy)}.mu-history{grid-column:1/-1;border:1px solid #29445f;border-radius:14px;background:#0e1c2d;overflow:hidden}.mu-history-row{display:grid;grid-template-columns:1fr 1.2fr 1fr 1fr;gap:8px;padding:11px 14px;border-top:1px solid #243b54;align-items:center;font-size:11px}.mu-history-row:first-of-type{border-top:0}.mu-history-row strong{font:700 13px var(--mono)}.mu-empty{grid-column:1/-1;border:1px solid #29445f;border-radius:12px;padding:18px;background:#102036;color:#9fb3cb;line-height:1.7}.mu-risk-note{grid-column:1/-1;color:#8197b1;font-size:11px;line-height:1.6;padding:0 3px}
+@media(max-width:760px){.mu-live-grid{grid-template-columns:1fr}.mu-plan-levels{grid-template-columns:repeat(3,1fr)}.mu-plan-levels div:nth-child(4){border-inline-start:0}.mu-history-row{grid-template-columns:1fr 1fr}.mu-metrics{grid-template-columns:repeat(2,1fr)}.mu-metric:nth-child(3n+1){border-inline-start:1px solid #243c56}.mu-metric:nth-child(2n+1){border-inline-start:0}}
 </style>
 </head>
 <body>
@@ -314,6 +320,10 @@ body{background:#080f1c;background-image:radial-gradient(ellipse 60% 30% at 75% 
   <div class="strat-tab s-wedge" id="stab-wedge" onclick="setStrat('wedge')">
     <span class="strat-icon">◇</span>
     <span><span class="strat-name">النماذج الفنية</span><span class="strat-desc">Wedge · 5M / 15M</span></span>
+  </div>
+  <div class="strat-tab s-mu" id="stab-mu" onclick="setStrat('mu')">
+    <span class="strat-icon">MU</span>
+    <span><span class="strat-name">MU Live</span><span class="strat-desc">1M · VWAP · Levels</span></span>
   </div>
   <div class="strat-tab s-mkt" id="stab-mkt" onclick="setStrat('mkt')">
     <span class="strat-icon">MKT</span>
@@ -420,6 +430,9 @@ body{background:#080f1c;background-image:radial-gradient(ellipse 60% 30% at 75% 
 </div>
 
 <!-- ══ MARKET OVERVIEW SECTION ══ -->
+<div class="tf-wrap" id="wrap-mu">
+  <div class="mu-strip"><span id="muRefreshState">تحديث كل 30 ثانية عند فتح الصفحة</span><button onclick="fetchMULive(true)">تحديث MU ↻</button></div>
+</div>
 <div class="tf-wrap" id="wrap-ledger">
   <div class="filters" id="filters-ledger">
     <button class="f on" onclick="setLedgerFilter(this,'all')">الكل</button>
@@ -478,7 +491,7 @@ let data = {
   wedges: { signals:[], events:[] },
   market: { items:[], score:50, mood:'neutral', breadth:0, breadthTotal:4, vixChange:null, session:'closed' }
 };
-let strat   = 'wt';   // 'wt' | 'bo' | 'id' | 'wedge' | 'mkt' | 'ledger'
+let strat   = 'wt';   // 'wt' | 'bo' | 'id' | 'wedge' | 'mu' | 'mkt' | 'ledger'
 let curTF   = '1h';
 let wtFilt  = 'all';
 let boFilt  = 'all';
@@ -487,6 +500,7 @@ let wedgeFilt = 'all';
 let mktView = 'overview';
 let ledger = {records:[],updatedAt:null,error:null};
 let ledgerFilter = 'all', ledgerLimit = 50;
+let muData = null, muLoading = false, muError = null;
 let srch    = '';
 const REFRESH = 5 * 60 * 1000;
 let scanInProgress = false;
@@ -521,18 +535,21 @@ function setStrat(s) {
   document.getElementById('stab-bo').classList.toggle('active', s==='bo');
   document.getElementById('stab-id').classList.toggle('active', s==='id');
   document.getElementById('stab-wedge').classList.toggle('active', s==='wedge');
+  document.getElementById('stab-mu').classList.toggle('active', s==='mu');
   document.getElementById('stab-mkt').classList.toggle('active', s==='mkt');
   document.getElementById('stab-ledger').classList.toggle('active', s==='ledger');
   document.getElementById('wrap-wt').classList.toggle('active', s==='wt');
   document.getElementById('wrap-bo').classList.toggle('active', s==='bo');
   document.getElementById('wrap-id').classList.toggle('active', s==='id');
   document.getElementById('wrap-wedge').classList.toggle('active', s==='wedge');
+  document.getElementById('wrap-mu').classList.toggle('active', s==='mu');
   document.getElementById('wrap-mkt').classList.toggle('active', s==='mkt');
   document.getElementById('wrap-ledger').classList.toggle('active', s==='ledger');
   document.getElementById('resultsTitle').textContent = s==='mkt'
     ? ({overview:'وضع السوق العام',pre:'قراءة قبل الافتتاح',sectors:'قيادة القطاعات',calendar:'تقويم اليوم'}[mktView] || 'وضع السوق العام')
-    : s==='ledger' ? 'سجل الإشارات وأداؤها' : 'الإشارات المكتشفة';
+    : s==='ledger' ? 'سجل الإشارات وأداؤها' : s==='mu' ? 'MU · المضاربة اللحظية' : 'الإشارات المكتشفة';
   if(s==='ledger') fetchLedger();
+  if(s==='mu') fetchMULive();
   renderCards();
 }
 
@@ -600,6 +617,20 @@ async function fetchLedger() {
   if(strat==='ledger') renderCards();
 }
 
+async function fetchMULive(force=false) {
+  if(muLoading&&!force) return;
+  muLoading=true; muError=null;
+  const state=document.getElementById('muRefreshState');
+  if(state) state.textContent='جاري تحديث MU...';
+  try{
+    const response=await fetch('/api/mu-live',{cache:'no-store'});
+    if(!response.ok) throw new Error('unavailable');
+    muData=await response.json();
+    if(state) state.textContent=`آخر جلب ${ledgerDate(muData.fetchedAt)} · تحديث تلقائي 30 ثانية`;
+  }catch{muError='تعذر جلب بيانات MU الآن. حاول التحديث بعد قليل.';if(state)state.textContent=muError;}
+  finally{muLoading=false;if(strat==='mu')renderCards();}
+}
+
 function isMarketScanWindow() {
   const ny = new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
   const mins = ny.getHours()*60+ny.getMinutes(), day=ny.getDay();
@@ -632,7 +663,7 @@ async function refreshLive(forceScan=false) {
 function manualRefresh() {
   const b = document.getElementById('rfBtn');
   b.classList.add('spinning');
-  refreshLive(true).finally(()=>b.classList.remove('spinning'));
+  (strat==='mu'?fetchMULive(true):refreshLive(true)).finally(()=>b.classList.remove('spinning'));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -817,6 +848,7 @@ function renderCards() {
   else if (strat === 'bo') renderBO();
   else if (strat === 'id') renderIntraday();
   else if (strat === 'wedge') renderWedges();
+  else if (strat === 'mu') renderMU();
   else if (strat === 'ledger') renderLedger();
   else renderMarket();
 }
@@ -849,6 +881,39 @@ function renderLedger() {
     const move=Number.isFinite(Number(r.outcomeR))&&r.outcomeR!==null?` · نهاية الخطة ${Number(r.outcomeR).toFixed(2)}R`:'';
     return `<article class="ledger-card ${r.status==='STOPPED'?'stopped':hit?'hit':''}"><div class="ledger-top"><div><strong>${esc(r.symbol)}</strong><small>${esc(names[r.strategy]||r.strategy)} · ${esc(r.mode)} · ${esc(r.timeframe)} · ${r.direction==='buy'?'CALL ↑':'PUT ↓'}</small><small>الإشارة ${ledgerDate(r.signalAt)} · بدء المتابعة ${ledgerDate(r.trackingFrom)} بتوقيت السعودية</small></div><span class="ledger-state">${esc(statuses[r.status]||r.status)}</span></div><div class="ledger-levels">${levels.map(([label,price,at])=>`<span class="${at?'met':''}">${ledgerMoney(price)}<small>${label}${at?' ✓':''}</small></span>`).join('')}<span>${ledgerMoney(r.latestPrice)}<small>آخر إغلاق مرصود</small></span></div><div class="ledger-foot">${r.t1HitAt?'T1: '+ledgerDate(r.t1HitAt)+' · ':''}${r.t2HitAt?'T2: '+ledgerDate(r.t2HitAt)+' · ':''}${r.t3HitAt?'T3: '+ledgerDate(r.t3HitAt)+' · ':''}${r.stoppedAt?'وقف: '+ledgerDate(r.stoppedAt)+' · ':''}${r.evaluatedBars||0} شموع مكتملة${move}${r.status==='NO_COVERAGE'?' · لا يُحسب أداء لهذه الإشارة بسبب نقص التغطية':''}</div></article>`;
   }).join('')+(shown.length>ledgerLimit?`<button class="ledger-more" onclick="ledgerLimit+=50;renderCards()">عرض المزيد (${shown.length-ledgerLimit})</button>`:''):'<div class="ledger-intro">لا توجد نتائج لهذا الفلتر.</div>');
+}
+
+function muMoney(value){return value!==null&&value!==undefined&&Number.isFinite(Number(value))?'$'+Number(value).toFixed(2):'—';}
+function muChart(data){
+  const series=Array.isArray(data.series)?data.series.filter(point=>Number.isFinite(point[1])):[];
+  if(series.length<2)return '<div class="mu-empty">الرسم غير متاح حتى تصل بيانات كافية.</div>';
+  const width=600,height=190,pad=18,values=series.map(p=>p[1]).concat(Number.isFinite(data.vwap)?[data.vwap]:[]);
+  let min=Math.min(...values),max=Math.max(...values);if(max===min){max+=1;min-=1;}const gap=(max-min)*.12;min-=gap;max+=gap;
+  const x=i=>pad+i*(width-pad*2)/(series.length-1),y=v=>pad+(max-v)*(height-pad*2)/(max-min);
+  const path=series.map((p,i)=>`${i?'L':'M'}${x(i).toFixed(1)},${y(p[1]).toFixed(1)}`).join(' ');
+  const vwapY=Number.isFinite(data.vwap)?y(data.vwap):null;
+  return `<figure class="mu-chart"><svg viewBox="0 0 ${width} ${height}" role="img" aria-label="حركة MU آخر 90 دقيقة"><line class="grid" x1="${pad}" y1="${pad}" x2="${width-pad}" y2="${pad}"/><line class="grid" x1="${pad}" y1="${height/2}" x2="${width-pad}" y2="${height/2}"/><line class="grid" x1="${pad}" y1="${height-pad}" x2="${width-pad}" y2="${height-pad}"/>${vwapY!==null?`<line class="vwap" x1="${pad}" y1="${vwapY.toFixed(1)}" x2="${width-pad}" y2="${vwapY.toFixed(1)}"/><text x="${pad+4}" y="${Math.max(11,vwapY-4).toFixed(1)}">VWAP ${Number(data.vwap).toFixed(2)}</text>`:''}<path class="line" d="${path}"/><circle cx="${x(series.length-1).toFixed(1)}" cy="${y(series.at(-1)[1]).toFixed(1)}" r="4" fill="#62c7ff"/><text x="${width-pad-4}" y="${Math.max(11,y(series.at(-1)[1])-7).toFixed(1)}" text-anchor="end">${series.at(-1)[1].toFixed(2)}</text></svg><figcaption>آخر ${series.length} شمعة دقيقة · الخط الأصفر VWAP · يتحدث حسب آخر بيانات مستلمة</figcaption></figure>`;
+}
+function renderMU(){
+  const wrap=document.getElementById('cards');
+  if(muLoading&&!muData){wrap.innerHTML='<div class="mu-empty">جاري تحميل لوحة MU اللحظية...</div>';return;}
+  if(muError&&!muData){wrap.innerHTML=`<div class="mu-empty">${muError}</div>`;return;}
+  const d=muData;if(!d){wrap.innerHTML='<div class="mu-empty">افتح الصفحة أو اضغط تحديث لبدء مراقبة MU.</div>';return;}
+  const sessions={pre:'قبل الافتتاح',open:'السوق مفتوح',after:'بعد الإغلاق',closed:'السوق مغلق'};
+  const states={WAIT:'انتظار تأكيد',CALL_WATCH:'مراقبة CALL',PUT_WATCH:'مراقبة PUT',CALL_TRIGGERED:'CALL مؤكد',PUT_TRIGGERED:'PUT مؤكد'};
+  const statusNames={TRACKING:'قيد المتابعة',T1_HIT:'وصل T1',T2_HIT:'وصل T2',T3_HIT:'وصل T3',STOPPED:'لمس الوقف',SESSION_ENDED:'انتهت الجلسة'};
+  const age=Math.max(0,Math.round((Date.now()-Number(d.quoteAt))/1000));
+  const ageText=age<60?`${age} ثانية`:age<3600?`${Math.floor(age/60)} دقيقة`:`${Math.floor(age/3600)} ساعة`;
+  const direction=d.direction==='buy'?'call':d.direction==='sell'?'put':'';
+  const changeClass=Number(d.changePct)>=0?'up':'down',changeSign=Number(d.changePct)>=0?'+':'';
+  const checkNames={vwap:'VWAP',ema:'EMA 9/20',momentum:'الزخم RSI',breakout:'اختراق 5 شموع',volume:'الفوليوم النسبي'};
+  const checks=Object.entries(d.checks||{}).map(([key,value])=>`<span class="mu-check ${value?'ok':''}">${value?'✓':'○'} ${checkNames[key]||key}</span>`).join('');
+  const metric=(value,label)=>`<div class="mu-metric"><strong>${value}</strong><small>${label}</small></div>`;
+  const hero=`<div class="mu-live-grid"><section class="mu-panel"><div class="mu-hero"><div class="mu-hero-top"><div><div class="mu-symbol">MU</div><div class="mu-company">Micron Technology · شموع 1M</div></div><div class="mu-price"><strong>${muMoney(d.price)}</strong><span class="${changeClass}">${changeSign}${Number(d.change||0).toFixed(2)} · ${changeSign}${Number(d.changePct||0).toFixed(2)}%</span></div></div><div class="mu-fresh ${d.stale?'warn':''}">${sessions[d.session]||d.session} · آخر شمعة ${ledgerDate(d.quoteAt)} بتوقيت السعودية · عمرها ${ageText}${d.stale?' · البيانات متأخرة':''}</div><div class="mu-signal ${direction}"><div class="mu-signal-row"><strong>${states[d.state]||d.state}</strong><span class="mu-score">${d.score||0}/5 شروط</span></div><div class="mu-checks">${checks}</div></div></div>${muChart(d)}</section><section class="mu-panel"><div class="mu-section-title">مؤشرات اللحظة</div><div class="mu-metrics">${metric(muMoney(d.vwap),'VWAP')}${metric(muMoney(d.ema9),'EMA 9')}${metric(muMoney(d.ema20),'EMA 20')}${metric(d.rsi??'—','RSI')}${metric(d.relativeVolume==null?'—':d.relativeVolume+'x','Relative Volume')}${metric(muMoney(d.atr1m),'ATR · 1M')}</div><div class="mu-section-title">مستويات اليوم</div><div class="mu-metrics">${metric(muMoney(d.dayHigh),'أعلى اليوم')}${metric(muMoney(d.dayLow),'أدنى اليوم')}${metric(muMoney(d.orHigh),'Opening Range High')}${metric(muMoney(d.orLow),'Opening Range Low')}${metric(muMoney(d.preHigh),'Pre High')}${metric(muMoney(d.preLow),'Pre Low')}${metric(muMoney(d.priorHigh),'أعلى أمس')}${metric(muMoney(d.priorLow),'أدنى أمس')}${metric(muMoney(d.breakoutLevel),'مستوى التأكيد')}</div></section></div>`;
+  let plan='';
+  if(d.activePlan){const p=d.activePlan,buy=p.direction==='buy';plan=`<section class="mu-plan ${buy?'call':'put'}"><div class="mu-plan-head"><div><strong>${buy?'CALL ▲':'PUT ▼'} · خطة ثابتة</strong><div class="mu-company">الإشارة ${ledgerDate(p.signalAt)} · 1M</div></div><span class="mu-plan-status">${statusNames[p.status]||p.status}</span></div><div class="mu-plan-levels"><div><strong>${muMoney(p.entry)}</strong><small>Entry</small></div><div class="stop"><strong>${muMoney(p.stop)}</strong><small>Stop</small></div><div class="${p.t1HitAt?'hit':''}"><strong>${muMoney(p.t1)}</strong><small>T1 ${p.t1HitAt?'✓':''}</small></div><div class="${p.t2HitAt?'hit':''}"><strong>${muMoney(p.t2)}</strong><small>T2 ${p.t2HitAt?'✓':''}</small></div><div class="${p.t3HitAt?'hit':''}"><strong>${muMoney(p.t3)}</strong><small>T3 ${p.t3HitAt?'✓':''}</small></div></div></section>`;}else plan='<div class="mu-empty"><strong>لا توجد خطة دخول مؤكدة حاليًا.</strong><br>تتحول المراقبة إلى خطة ثابتة بعد إغلاق شمعة دقيقة خارج مستوى الخمس شموع مع توافق 4 شروط على الأقل أثناء الجلسة.</div>';
+  const history=(d.plans||[]).length?`<section class="mu-history"><div class="mu-section-title">آخر إشارات MU</div>${d.plans.map(p=>`<div class="mu-history-row"><strong>${p.direction==='buy'?'CALL ▲':'PUT ▼'}</strong><span>${ledgerDate(p.signalAt)}</span><span>${muMoney(p.entry)} → ${muMoney(p.latestPrice)}</span><span>${statusNames[p.status]||p.status}</span></div>`).join('')}</section>`:'';
+  wrap.innerHTML=hero+plan+history+'<div class="mu-risk-note">اللوحة تعتمد على بيانات السوق المستلمة من المصدر وقد تتأخر. الإشارة مبنية على حركة سهم MU، ولا تحسب سعر عقد الأوبشن أو السبريد أو التذبذب الضمني. راقب عمر آخر شمعة قبل اتخاذ القرار.</div>';
 }
 
 let calendarWidgetLoaded=false;
@@ -1387,7 +1452,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   setTF('1h');
   refreshLive();
   setInterval(refreshLive, REFRESH);
-  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refreshLive(); });
+  setInterval(()=>{if(strat==='mu'&&!document.hidden)fetchMULive();},30000);
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) strat==='mu'?fetchMULive():refreshLive(); });
 });
 </script>
 </body>
