@@ -58,8 +58,33 @@ function fromSignal(signal, strategy, observedAt) {
   };
 }
 
+function migrateRecentIntraday(record, now) {
+  if (record.strategy !== 'intraday' || record.trackingPolicy === 'three-session-time-stop-v1') return record;
+  const age = now - Number(record.observedAt || record.trackingFrom || record.signalAt);
+  if (!Number.isFinite(age) || age < 0 || age > 5 * 86400000) return record;
+  const priorStop = record.stopBreachedAt || record.stoppedAt || null;
+  const hitStatus = record.t3HitAt ? 'T3_HIT' : record.t2HitAt ? 'T2_HIT' : record.t1HitAt ? 'T1_HIT' : 'TRACKING';
+  const terminal = hitStatus === 'T3_HIT';
+  return {
+    ...record,
+    trackingPolicy: 'three-session-time-stop-v1',
+    sessionDates: [record.nyDate || nyDateKey(record.trackingFrom || record.signalAt)],
+    stopBreachedAt: priorStop,
+    status: hitStatus,
+    stoppedAt: null,
+    completedAt: hitStatus === 'T3_HIT' ? record.completedAt : null,
+    outcomeR: hitStatus === 'T3_HIT' ? record.outcomeR : null,
+    latestPrice: terminal ? record.latestPrice : null,
+    latestAt: terminal ? record.latestAt : null,
+    evaluatedBars: terminal ? record.evaluatedBars : 0,
+    maxFavorableR: terminal ? record.maxFavorableR : 0,
+    maxAdverseR: terminal ? record.maxAdverseR : 0,
+  };
+}
+
 function captureNewSignals(existing, scans, observedAt, marketOpen) {
-  const records = [...existing], known = new Set(existing.map(record => record.id));
+  const records = existing.map(record => migrateRecentIntraday(record, observedAt));
+  const known = new Set(records.map(record => record.id));
   if (!marketOpen) return records;
   const groups = [
     ['intraday', scans.intraday?.signals || []],
@@ -144,4 +169,4 @@ function keepRecent(records, now) {
     .sort((a, b) => b.observedAt - a.observedAt).slice(0, MAX_RECORDS);
 }
 
-module.exports = { fromSignal, captureNewSignals, advanceRecord, keepRecent, nyDateKey, nySession };
+module.exports = { fromSignal, captureNewSignals, advanceRecord, keepRecent, migrateRecentIntraday, nyDateKey, nySession };
