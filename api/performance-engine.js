@@ -50,6 +50,8 @@ function fromSignal(signal, strategy, observedAt) {
     direction: signal.type, signalAt: sourceTime, observedAt, trackingFrom: startAt,
     nyDate: nyDateKey(startAt), entry, stop, t1: targets[0], t2: targets[1], t3: targets[2],
     risk: +risk.toFixed(2), score: Number(signal.score ?? signal.confidence) || null,
+    trackingPolicy: strategy === 'intraday' ? 'three-session-time-stop-v1' : 'same-session-price-stop-v1',
+    sessionDates: strategy === 'intraday' ? [nyDateKey(startAt)] : [], stopBreachedAt: null,
     status: 'TRACKING', t1HitAt: null, t2HitAt: null, t3HitAt: null, stoppedAt: null,
     latestPrice: null, latestAt: null, maxFavorableR: 0, maxAdverseR: 0, evaluatedBars: 0,
     outcomeR: null, completedAt: null,
@@ -78,22 +80,28 @@ function advanceRecord(record, quotes, now) {
   const next = { ...record };
   const buy = record.direction === 'buy';
   const risk = record.risk;
+  const threeSessionPolicy = record.strategy === 'intraday' && record.trackingPolicy === 'three-session-time-stop-v1';
+  next.sessionDates = Array.isArray(record.sessionDates) ? [...record.sessionDates] : threeSessionPolicy ? [record.nyDate] : [];
   if (!Number.isFinite(risk) || risk <= 0) return next;
   for (const quote of quotes) {
     const openAt = new Date(quote.date).getTime();
     const closeAt = openAt + 5 * 60000;
     // Evaluate only entire regular-session candles observed after tracking began.
+    const quoteDate = nyDateKey(openAt);
     if (openAt < record.trackingFrom || closeAt > now || closeAt <= (next.latestAt || 0)
-      || nyDateKey(openAt) !== record.nyDate || !nySession(openAt)) continue;
+      || (!threeSessionPolicy && quoteDate !== record.nyDate) || (threeSessionPolicy && quoteDate < record.nyDate) || !nySession(openAt)) continue;
     const high = Number(quote.high), low = Number(quote.low), close = Number(quote.close);
     if (![high, low, close].every(Number.isFinite)) continue;
     next.evaluatedBars++;
     next.latestPrice = +close.toFixed(2);
     next.latestAt = closeAt;
+    if (threeSessionPolicy && !next.sessionDates.includes(quoteDate)) next.sessionDates.push(quoteDate);
     const favorable = buy ? high - record.entry : record.entry - low;
     const adverse = buy ? record.entry - low : high - record.entry;
-    // OHLC does not reveal intrabar order: stop wins if both levels are touched.
-    if (buy ? low <= record.stop : high >= record.stop) {
+    const breachedStop = buy ? low <= record.stop : high >= record.stop;
+    if (threeSessionPolicy && breachedStop && !next.stopBreachedAt) next.stopBreachedAt = closeAt;
+    // Standard setups use the conservative outcome when stop and target share a candle.
+    if (!threeSessionPolicy && breachedStop) {
       next.status = 'STOPPED'; next.stoppedAt = closeAt; next.completedAt = closeAt; next.outcomeR = -1;
       break;
     }
@@ -103,12 +111,26 @@ function advanceRecord(record, quotes, now) {
     if (!next.t2HitAt && (buy ? high >= record.t2 : low <= record.t2)) next.t2HitAt = closeAt;
     if (!next.t3HitAt && (buy ? high >= record.t3 : low <= record.t3)) next.t3HitAt = closeAt;
     if (next.t3HitAt) {
-      next.status = 'T3_HIT'; next.completedAt = closeAt; next.outcomeR = 3; break;
+      next.status = 'T3_HIT'; next.completedAt = closeAt;
+      next.outcomeR = +((Math.abs(record.t3 - record.entry)) / risk).toFixed(2); break;
     }
     if (next.t2HitAt) next.status = 'T2_HIT';
     else if (next.t1HitAt) next.status = 'T1_HIT';
   }
-  if ((nyDateKey(now) !== record.nyDate || nyMinutes(now) >= 970) && ['TRACKING', 'T1_HIT', 'T2_HIT'].includes(next.status)) {
+  if (threeSessionPolicy && ['TRACKING', 'T1_HIT', 'T2_HIT'].includes(next.status)) {
+    const dates = [...new Set(next.sessionDates)].sort();
+    const thirdDate = dates[2];
+    const nowDate = nyDateKey(now);
+    const thirdSessionObserved = thirdDate && next.latestAt && nyDateKey(next.latestAt - 1) === thirdDate && nyMinutes(next.latestAt) >= 960;
+    const thirdSessionComplete = thirdDate && thirdSessionObserved && (nowDate > thirdDate || (nowDate === thirdDate && nyMinutes(now) >= 970));
+    if (thirdSessionComplete) {
+      next.status = next.t1HitAt ? 'THREE_DAY_COMPLETE' : 'THREE_DAY_STOP';
+      next.completedAt = next.latestAt || now;
+      next.outcomeR = next.latestPrice == null ? null : +(((next.latestPrice - record.entry) * (buy ? 1 : -1)) / risk).toFixed(2);
+    } else if (now - record.trackingFrom > 8 * 86400000 && (!thirdDate || !thirdSessionObserved)) {
+      next.status = 'NO_COVERAGE'; next.completedAt = next.latestAt || now; next.outcomeR = null;
+    }
+  } else if (!threeSessionPolicy && (nyDateKey(now) !== record.nyDate || nyMinutes(now) >= 970) && ['TRACKING', 'T1_HIT', 'T2_HIT'].includes(next.status)) {
     const eodObserved = next.latestAt && nyDateKey(next.latestAt - 1) === record.nyDate && nyMinutes(next.latestAt) >= 960;
     next.status = eodObserved ? 'SESSION_ENDED' : 'NO_COVERAGE';
     next.completedAt = next.latestAt || now;
