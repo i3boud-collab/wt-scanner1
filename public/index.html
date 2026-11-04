@@ -862,24 +862,26 @@ function renderLedger() {
   const wrap=document.getElementById('cards');
   const records=ledger.records;
   const active=r=>['TRACKING','T1_HIT','T2_HIT'].includes(r.status);
-  const completed=r=>['T3_HIT','STOPPED','SESSION_ENDED','NO_COVERAGE'].includes(r.status);
-  const intro='<div class="ledger-intro"><strong>خطط رصدها الموقع، وليست صفقات منفذة.</strong> التواريخ ميلادية والأوقات بتوقيت السعودية. يبدأ تتبع الشموع بعد رصد الإشارة، لذلك لا تُحتسب حركة سابقة. نسبة نجاح T1 = الإشارات المكتملة التي لمست T1 ÷ جميع الإشارات المكتملة ببيانات كافية ضمن الفلتر؛ تُستبعد الإشارات قيد المتابعة وناقصة البيانات. الأسعار والأهداف للسهم الأساسي بالدولار وليست سعر عقد الأوبشن أو ربحه. عند لمس الوقف والهدف في شمعة واحدة نحتسب الوقف أولًا. يحتفظ السجل بآخر 120 يومًا أو 1800 إشارة.</div>';
+  const completed=r=>['T3_HIT','STOPPED','SESSION_ENDED','THREE_DAY_STOP','THREE_DAY_COMPLETE','NO_COVERAGE'].includes(r.status);
+  const intro='<div class="ledger-intro"><strong>خطط رصدها الموقع، وليست صفقات منفذة.</strong> إشارات اللحظي الجديدة تُتابع ثلاث جلسات تداول دون وقف سعري؛ إذا لم تلمس T1 بنهاية الجلسة الثالثة تُغلق كوقف زمني، مع توثيق أي كسر لمستوى المخاطرة السابق. الاستراتيجيات الأخرى تحتفظ بوقفها المعتاد. التواريخ ميلادية والأوقات بتوقيت السعودية. نسبة نجاح T1 = الإشارات المكتملة التي لمست T1 ÷ جميع الإشارات المكتملة ببيانات كافية ضمن الفلتر. الأسعار والأهداف للسهم الأساسي وليست سعر عقد الأوبشن أو ربحه.</div>';
   if(ledger.error){wrap.innerHTML=intro+'<div class="ledger-intro">'+ledger.error+'</div>';return;}
   let shown=records.filter(r=>ledgerFilter==='all'||(ledgerFilter==='active'?active(r):ledgerFilter==='completed'?completed(r):r.strategy===ledgerFilter));
   if(srch) shown=shown.filter(r=>String(r.symbol).toUpperCase().includes(srch.toUpperCase()));
   const evaluated=shown.filter(r=>completed(r)&&r.status!=='NO_COVERAGE');
   const successful=evaluated.filter(r=>r.t1HitAt).length;
   const successRate=evaluated.length?`${(100*successful/evaluated.length).toFixed(1)}%`:'—';
-  const stats=`<div class="ledger-summary"><div><strong>${shown.length}</strong><small>إشارة مسجلة</small></div><div><strong>${shown.filter(active).length}</strong><small>قيد المتابعة</small></div><div><strong>${shown.filter(r=>r.t1HitAt).length}</strong><small>لامست T1</small></div><div><strong>${shown.filter(r=>r.t2HitAt).length}</strong><small>لامست T2</small></div><div><strong>${shown.filter(r=>r.t3HitAt).length}</strong><small>لامست T3</small></div><div><strong>${shown.filter(r=>r.status==='STOPPED'&&!r.t1HitAt).length}</strong><small>وقف قبل T1</small></div><div><strong>${successRate}</strong><small>نجاح T1 · ${successful}/${evaluated.length} مكتملة</small></div></div>`;
+  const stats=`<div class="ledger-summary"><div><strong>${shown.length}</strong><small>إشارة مسجلة</small></div><div><strong>${shown.filter(active).length}</strong><small>قيد المتابعة</small></div><div><strong>${shown.filter(r=>r.t1HitAt).length}</strong><small>لامست T1</small></div><div><strong>${shown.filter(r=>r.t2HitAt).length}</strong><small>لامست T2</small></div><div><strong>${shown.filter(r=>r.t3HitAt).length}</strong><small>لامست T3</small></div><div><strong>${shown.filter(r=>(r.status==='STOPPED'||r.status==='THREE_DAY_STOP')&&!r.t1HitAt).length}</strong><small>وقف قبل T1</small></div><div><strong>${successRate}</strong><small>نجاح T1 · ${successful}/${evaluated.length} مكتملة</small></div></div>`;
   if(!records.length){wrap.innerHTML=intro+stats+'<div class="ledger-intro">لا توجد إشارات مسجلة بعد. يبدأ السجل بإشارات جديدة أثناء جلسة السوق بعد أول مسح ناجح.</div>';return;}
   const names={intraday:'لحظي',breakout:'اختراق',wedge:'نموذج فني'};
-  const statuses={TRACKING:'قيد المتابعة',T1_HIT:'تحقق T1 · مستمرة',T2_HIT:'تحقق T2 · مستمرة',T3_HIT:'تحقق T3',STOPPED:'لمس الوقف',SESSION_ENDED:'انتهت الجلسة',NO_COVERAGE:'بيانات غير كافية'};
+  const statuses={TRACKING:'قيد المتابعة',T1_HIT:'تحقق T1 · مستمرة',T2_HIT:'تحقق T2 · مستمرة',T3_HIT:'تحقق T3',STOPPED:'لمس الوقف',SESSION_ENDED:'انتهت الجلسة',THREE_DAY_STOP:'وقف زمني بعد 3 جلسات',THREE_DAY_COMPLETE:'اكتملت متابعة 3 جلسات',NO_COVERAGE:'بيانات غير كافية'};
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   wrap.innerHTML=intro+stats+(shown.length?shown.slice(0,ledgerLimit).map(r=>{
     const hit=r.status==='T3_HIT'||r.t1HitAt;
-    const levels=[['Entry',r.entry],['Stop',r.stop],['T1',r.t1,r.t1HitAt],['T2',r.t2,r.t2HitAt],['T3',r.t3,r.t3HitAt]];
+    const delayed=r.strategy==='intraday'&&r.trackingPolicy==='three-session-time-stop-v1';
+    const levels=delayed?[['Entry',r.entry],['T1',r.t1,r.t1HitAt],['T2',r.t2,r.t2HitAt],['T3',r.t3,r.t3HitAt]]:[['Entry',r.entry],['Stop',r.stop],['T1',r.t1,r.t1HitAt],['T2',r.t2,r.t2HitAt],['T3',r.t3,r.t3HitAt]];
     const move=Number.isFinite(Number(r.outcomeR))&&r.outcomeR!==null?` · نهاية الخطة ${Number(r.outcomeR).toFixed(2)}R`:'';
-    return `<article class="ledger-card ${r.status==='STOPPED'?'stopped':hit?'hit':''}"><div class="ledger-top"><div><strong>${esc(r.symbol)}</strong><small>${esc(names[r.strategy]||r.strategy)} · ${esc(r.mode)} · ${esc(r.timeframe)} · ${r.direction==='buy'?'CALL ↑':'PUT ↓'}</small><small>الإشارة ${ledgerDate(r.signalAt)} · بدء المتابعة ${ledgerDate(r.trackingFrom)} بتوقيت السعودية</small></div><span class="ledger-state">${esc(statuses[r.status]||r.status)}</span></div><div class="ledger-levels">${levels.map(([label,price,at])=>`<span class="${at?'met':''}">${ledgerMoney(price)}<small>${label}${at?' ✓':''}</small></span>`).join('')}<span>${ledgerMoney(r.latestPrice)}<small>آخر إغلاق مرصود</small></span></div><div class="ledger-foot">${r.t1HitAt?'T1: '+ledgerDate(r.t1HitAt)+' · ':''}${r.t2HitAt?'T2: '+ledgerDate(r.t2HitAt)+' · ':''}${r.t3HitAt?'T3: '+ledgerDate(r.t3HitAt)+' · ':''}${r.stoppedAt?'وقف: '+ledgerDate(r.stoppedAt)+' · ':''}${r.evaluatedBars||0} شموع مكتملة${move}${r.status==='NO_COVERAGE'?' · لا يُحسب أداء لهذه الإشارة بسبب نقص التغطية':''}</div></article>`;
+    const sessionProgress=delayed?` · الجلسات ${Math.min(3,(r.sessionDates||[]).length)}/3`:'';
+    return `<article class="ledger-card ${r.status==='STOPPED'||r.status==='THREE_DAY_STOP'?'stopped':hit?'hit':''}"><div class="ledger-top"><div><strong>${esc(r.symbol)}</strong><small>${esc(names[r.strategy]||r.strategy)} · ${esc(r.mode)} · ${esc(r.timeframe)} · ${r.direction==='buy'?'CALL ↑':'PUT ↓'}</small><small>الإشارة ${ledgerDate(r.signalAt)} · بدء المتابعة ${ledgerDate(r.trackingFrom)} بتوقيت السعودية${sessionProgress}</small></div><span class="ledger-state">${esc(statuses[r.status]||r.status)}</span></div><div class="ledger-levels">${levels.map(([label,price,at])=>`<span class="${at?'met':''}">${ledgerMoney(price)}<small>${label}${at?' ✓':''}</small></span>`).join('')}<span>${ledgerMoney(r.latestPrice)}<small>آخر إغلاق مرصود</small></span></div><div class="ledger-foot">${r.t1HitAt?'T1: '+ledgerDate(r.t1HitAt)+' · ':''}${r.t2HitAt?'T2: '+ledgerDate(r.t2HitAt)+' · ':''}${r.t3HitAt?'T3: '+ledgerDate(r.t3HitAt)+' · ':''}${r.stopBreachedAt?'كسر مرجع المخاطرة: '+ledgerDate(r.stopBreachedAt)+' · ':''}${r.stoppedAt?'وقف: '+ledgerDate(r.stoppedAt)+' · ':''}${r.evaluatedBars||0} شموع مكتملة${move}${r.status==='NO_COVERAGE'?' · لا يُحسب أداء لهذه الإشارة بسبب نقص التغطية':''}</div></article>`;
   }).join('')+(shown.length>ledgerLimit?`<button class="ledger-more" onclick="ledgerLimit+=50;renderCards()">عرض المزيد (${shown.length-ledgerLimit})</button>`:''):'<div class="ledger-intro">لا توجد نتائج لهذا الفلتر.</div>');
 }
 
@@ -1090,7 +1092,7 @@ function renderIntraday() {
     const beyondStop = quoteFresh && (buy ? current<=Number(s.sl) : current>=Number(s.sl));
     const status = !quoteFresh ? 'السعر الحالي غير مؤكد؛ تحقق قبل التصرف'
       : s.session!=='open' || !isMarketScanWindow() ? 'خارج جلسة الأوبشن المعتادة'
-      : beyondStop ? 'تجاوز مستوى الوقف؛ الإشارة غير صالحة للدخول'
+      : beyondStop ? 'كسر مرجع المخاطرة؛ المتابعة مستمرة ضمن مهلة 3 جلسات'
       : beyondT1 ? 'وصل إلى T1؛ لا تطارد الدخول'
       : ageMinutes>=20 ? 'إشارة قديمة؛ أعد تقييم السعر'
       : 'إشارة حديثة؛ تحقق من سعر العقد والسيولة';
@@ -1133,7 +1135,7 @@ function renderIntraday() {
       <div class="bo-levels">
         <div class="bo-lv bo-lv-entry"><div class="bo-lv-val entry-v">$${s.entry}</div><div class="bo-lv-lbl">Entry ثابت</div></div>
         <div class="bo-lv bo-lv-alert"><div class="bo-lv-val alert-v">$${s.alertPrice}</div><div class="bo-lv-lbl">سعر التنبيه</div></div>
-        <div class="bo-lv bo-lv-stop"><div class="bo-lv-val sl-v">$${s.sl}</div><div class="bo-lv-lbl">SL · 0.75×ATR5</div></div>
+        <div class="bo-lv bo-lv-stop"><div class="bo-lv-val sl-v">3 جلسات</div><div class="bo-lv-lbl">وقف زمني إذا لم يصل T1</div></div>
         <div class="bo-lv bo-lv-target t1"><div class="bo-lv-val">$${s.t1}</div><div class="bo-lv-lbl">T1 · 0.5×ATR5</div></div>
         <div class="bo-lv bo-lv-target t2"><div class="bo-lv-val">$${s.t2}</div><div class="bo-lv-lbl">T2 · 1×ATR5</div></div>
         <div class="bo-lv bo-lv-target t3"><div class="bo-lv-val">$${s.t3}</div><div class="bo-lv-lbl">T3 · 1.5×ATR5</div></div>
